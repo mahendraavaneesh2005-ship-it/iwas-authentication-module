@@ -4,10 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Shield, CheckCircle2, Users, TrendingUp, Lock } from "lucide-react";
+import { Shield, CheckCircle2, Users, TrendingUp, Lock, User } from "lucide-react";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   return (
@@ -31,8 +31,14 @@ export default function Home() {
                   <span className="text-sm text-muted-foreground hidden sm:inline">
                     Welcome, {user.name}
                   </span>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/profile">
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </Link>
+                  </Button>
                   <Button onClick={() => router.push("/dashboard")}>
-                    Go to Dashboard
+                    Dashboard
                   </Button>
                 </>
               ) : (
@@ -57,7 +63,7 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-full px-4 py-2 mb-8">
               <CheckCircle2 className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                Story 1.1 — User Registration Complete
+                Story 1.3 — Profile Management Complete
               </span>
             </div>
             

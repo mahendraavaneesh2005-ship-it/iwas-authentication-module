@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Shield, User, Settings, TrendingUp, FileText } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -17,92 +19,167 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-zinc-50 p-4 dark:bg-zinc-950">
-        <div className="mx-auto max-w-4xl space-y-6 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back, {user?.name}!</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+        {/* Header */}
+        <header className="border-b border-border bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">IWAS</h1>
+                  <p className="text-xs text-muted-foreground">Insurance Workflow Automation</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/profile">
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Sign out
+                </Button>
+              </div>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
-              Sign out
-            </Button>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-6 py-12 max-w-6xl">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-2">
+              Welcome back, {user?.name}!
+            </h2>
+            <p className="text-muted-foreground">
+              Here's an overview of your account and quick actions
+            </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+            {/* Profile Card */}
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/profile")}>
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Your account details</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                    <User className="h-5 w-5 text-blue-600" />
+                  </div>
+                  Profile
+                </CardTitle>
+                <CardDescription>Manage your account details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Name</p>
-                  <p className="text-lg">{user?.name}</p>
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-medium">{user?.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p className="text-lg">{user?.email}</p>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium">{user?.email}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">User ID</p>
-                  <p className="text-sm font-mono">{user?.id}</p>
-                </div>
+                <Button variant="link" className="p-0 h-auto text-blue-600" asChild>
+                  <Link href="/profile">Edit Profile →</Link>
+                </Button>
               </CardContent>
             </Card>
 
+            {/* Quick Stats Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Stats</CardTitle>
-                <CardDescription>Your activity overview</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                  </div>
+                  Account Status
+                </CardTitle>
+                <CardDescription>Your current activity</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-muted-foreground">Account Status</p>
+                  <p className="text-sm text-muted-foreground">Status</p>
                   <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
                     Active
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-muted-foreground">Member Since</p>
-                  <p className="text-sm">{new Date().toLocaleDateString()}</p>
+                  <p className="text-sm text-muted-foreground">Member Since</p>
+                  <p className="text-sm font-medium">{new Date().toLocaleDateString()}</p>
                 </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">User ID</p>
+                  <p className="text-xs font-mono text-muted-foreground">{user?.id}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Settings Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                    <Settings className="h-5 w-5 text-blue-600" />
+                  </div>
+                  Quick Actions
+                </CardTitle>
+                <CardDescription>Manage your preferences</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+                  <Link href="/profile">
+                    <User className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start" disabled>
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Reports
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start" disabled>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Preferences
+                </Button>
               </CardContent>
             </Card>
           </div>
 
+          {/* Getting Started Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Getting Started</CardTitle>
+              <CardTitle>Getting Started with IWAS</CardTitle>
               <CardDescription>Complete these steps to get the most out of your account</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200 flex-shrink-0">
                     ✓
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">Create your account</p>
-                    <p className="text-sm text-muted-foreground">You&apos;ve successfully registered</p>
+                    <p className="text-sm text-muted-foreground">You've successfully registered with IWAS</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-200 flex-shrink-0">
                     2
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">Complete your profile</p>
                     <p className="text-sm text-muted-foreground">Add more information about yourself</p>
+                    <Button variant="link" className="p-0 h-auto mt-1 text-blue-600" asChild>
+                      <Link href="/profile">Update Profile →</Link>
+                    </Button>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 flex-shrink-0">
                     3
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">Explore features</p>
-                    <p className="text-sm text-muted-foreground">Discover what you can do with your account</p>
+                    <p className="text-sm text-muted-foreground">Discover what you can do with IWAS</p>
                   </div>
                 </div>
               </div>

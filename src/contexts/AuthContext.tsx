@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (name: string, email: string, currentPassword?: string, newPassword?: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -79,13 +80,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("user", JSON.stringify(userWithoutPassword));
   };
 
+  const updateProfile = async (name: string, email: string, currentPassword?: string, newPassword?: string) => {
+    if (!user) {
+      throw new Error("No user logged in");
+    }
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const userIndex = users.findIndex((u: any) => u.id === user.id);
+
+    if (userIndex === -1) {
+      throw new Error("User not found");
+    }
+
+    // If changing password, verify current password
+    if (newPassword) {
+      if (!currentPassword) {
+        throw new Error("Current password is required to set a new password");
+      }
+      if (users[userIndex].password !== currentPassword) {
+        throw new Error("Current password is incorrect");
+      }
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (email !== user.email) {
+      const emailExists = users.some((u: any) => u.email === email && u.id !== user.id);
+      if (emailExists) {
+        throw new Error("Email is already in use by another account");
+      }
+    }
+
+    // Update user data
+    users[userIndex] = {
+      ...users[userIndex],
+      name,
+      email,
+      ...(newPassword && { password: newPassword }),
+    };
+
+    // Save to localStorage
+    localStorage.setItem("users", JSON.stringify(users));
+
+    // Update current user session
+    const updatedUser = { id: user.id, name, email };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
