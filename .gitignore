@@ -36,3 +36,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+node_modules/
+**/node_modules/
+.env
+.env.local
+.env.*.local
+.next/
+out/
+dist/
+build/
+coverage/
+bun.lockb
+iwas-authentication-module/
