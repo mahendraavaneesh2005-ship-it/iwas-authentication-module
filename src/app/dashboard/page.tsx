@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, Settings, TrendingUp, FileText, Car, Plus } from "lucide-react";
+import { Shield, User, Settings, TrendingUp, FileText, Car, Plus, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -61,7 +61,7 @@ export default function DashboardPage() {
           {/* Insurance Actions */}
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-foreground mb-4">Insurance Services</h3>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Card className="hover:shadow-md transition-shadow cursor-pointer border-2 border-blue-200 dark:border-blue-900" onClick={() => router.push("/insurance/apply")}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -101,6 +101,28 @@ export default function DashboardPage() {
                   <Button variant="outline" asChild>
                     <Link href="/insurance/policies">
                       View Policies →
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/insurance/claims")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <AlertCircle className="h-5 w-5 text-blue-600" />
+                    </div>
+                    My Claims
+                  </CardTitle>
+                  <CardDescription>Submit and track insurance claims</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    File new claims for vehicle damage or loss. Track status of your submitted claims.
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link href="/insurance/claims">
+                      View Claims →
                     </Link>
                   </Button>
                 </CardContent>
@@ -188,9 +210,11 @@ export default function DashboardPage() {
                     View Policies
                   </Link>
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start" disabled>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Preferences
+                <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+                  <Link href="/insurance/claims">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    View Claims
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -226,12 +250,12 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 flex-shrink-0">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-200 flex-shrink-0">
                     3
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">Manage your policies</p>
-                    <p className="text-sm text-muted-foreground">Track and manage all your insurance policies in one place</p>
+                    <p className="font-medium">Manage your policies and claims</p>
+                    <p className="text-sm text-muted-foreground">Track policies and file claims for vehicle damage in one place</p>
                   </div>
                 </div>
               </div>

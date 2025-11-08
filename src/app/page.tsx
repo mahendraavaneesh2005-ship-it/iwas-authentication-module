@@ -60,10 +60,10 @@ export default function Home() {
       <main className="flex-1">
         <div className="container mx-auto px-6 py-20">
           <div className="max-w-4xl mx-auto text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-full px-4 py-2 mb-8">
-              <CheckCircle2 className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                Story 2.5 — Policy Dashboard Complete
+            <div className="inline-flex items-center gap-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-full px-4 py-2 mb-8">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                Stories 2.4 & 2.5 Complete — Claims Workflow Ready
               </span>
             </div>
             
