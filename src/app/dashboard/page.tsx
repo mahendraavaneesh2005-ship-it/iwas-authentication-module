@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, Settings, TrendingUp, FileText } from "lucide-react";
+import { Shield, User, Settings, TrendingUp, FileText, Car, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -56,6 +56,56 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">
               Here's an overview of your account and quick actions
             </p>
+          </div>
+
+          {/* Insurance Actions */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-foreground mb-4">Insurance Services</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer border-2 border-blue-200 dark:border-blue-900" onClick={() => router.push("/insurance/apply")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <Plus className="h-5 w-5 text-blue-600" />
+                    </div>
+                    New Insurance Application
+                  </CardTitle>
+                  <CardDescription>Apply for vehicle insurance coverage</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Start a new insurance application for your vehicle. Get instant premium calculation and coverage options.
+                  </p>
+                  <Button className="bg-blue-600 hover:bg-blue-700" asChild>
+                    <Link href="/insurance/apply">
+                      Apply Now →
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/insurance/policies")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    My Policies
+                  </CardTitle>
+                  <CardDescription>View and manage your insurance policies</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Access your active insurance policies, view coverage details, and manage your account.
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link href="/insurance/policies">
+                      View Policies →
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -132,9 +182,11 @@ export default function DashboardPage() {
                     Edit Profile
                   </Link>
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start" disabled>
-                  <FileText className="h-4 w-4 mr-2" />
-                  View Reports
+                <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+                  <Link href="/insurance/policies">
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Policies
+                  </Link>
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start" disabled>
                   <Settings className="h-4 w-4 mr-2" />
@@ -166,10 +218,10 @@ export default function DashboardPage() {
                     2
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">Complete your profile</p>
-                    <p className="text-sm text-muted-foreground">Add more information about yourself</p>
+                    <p className="font-medium">Apply for insurance</p>
+                    <p className="text-sm text-muted-foreground">Get coverage for your vehicle with instant quotes</p>
                     <Button variant="link" className="p-0 h-auto mt-1 text-blue-600" asChild>
-                      <Link href="/profile">Update Profile →</Link>
+                      <Link href="/insurance/apply">Start Application →</Link>
                     </Button>
                   </div>
                 </div>
@@ -178,8 +230,8 @@ export default function DashboardPage() {
                     3
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">Explore features</p>
-                    <p className="text-sm text-muted-foreground">Discover what you can do with IWAS</p>
+                    <p className="font-medium">Manage your policies</p>
+                    <p className="text-sm text-muted-foreground">Track and manage all your insurance policies in one place</p>
                   </div>
                 </div>
               </div>

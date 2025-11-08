@@ -63,7 +63,7 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-full px-4 py-2 mb-8">
               <CheckCircle2 className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                Story 1.3 — Profile Management Complete
+                Story 2.5 — Policy Dashboard Complete
               </span>
             </div>
             
