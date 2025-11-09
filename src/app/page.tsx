@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Shield, CheckCircle2, Users, TrendingUp, Lock, User } from "lucide-react";
+import { Shield, CheckCircle2, Users, TrendingUp, Lock, User, Heart, FileText, CreditCard } from "lucide-react";
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -63,7 +63,7 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-full px-4 py-2 mb-8">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <span className="text-sm font-medium text-green-900 dark:text-green-100">
-                Stories 2.4 & 2.5 Complete — Claims Workflow Ready
+                Health Insurance Stories Complete — Full Lifecycle Ready
               </span>
             </div>
             
@@ -91,6 +91,42 @@ export default function Home() {
                   </Button>
                 </>
               )}
+            </div>
+          </div>
+
+          {/* Health Insurance Quick Actions */}
+          <div className="max-w-5xl mx-auto mb-16">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-8 shadow-lg">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Health Insurance</h3>
+                  <p className="text-blue-100">
+                    Apply for coverage, select plans, and manage your health claims
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button size="lg" variant="secondary" asChild className="bg-white hover:bg-blue-50 text-blue-600">
+                    <Link href="/health/apply">
+                      <Heart className="h-5 w-5 mr-2" />
+                      Apply Now
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-blue-600">
+                    <Link href="/health/plans">
+                      <CreditCard className="h-5 w-5 mr-2" />
+                      View Plans
+                    </Link>
+                  </Button>
+                  {user && (
+                    <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-blue-600">
+                      <Link href="/health/claims/new">
+                        <FileText className="h-5 w-5 mr-2" />
+                        File Claim
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
