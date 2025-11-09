@@ -5,12 +5,45 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, Settings, TrendingUp, FileText, Car, Plus, AlertCircle } from "lucide-react";
+import { Shield, User, Settings, TrendingUp, FileText, Car, Plus, AlertCircle, Heart, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+
+interface ExpiringPolicy {
+  id: number;
+  policyNumber: string;
+  daysUntilExpiry: number;
+  plan: {
+    name: string;
+  };
+}
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [expiringPolicies, setExpiringPolicies] = useState<ExpiringPolicy[]>([]);
+  const [loadingExpiring, setLoadingExpiring] = useState(true);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchExpiringPolicies();
+    }
+  }, [user?.id]);
+
+  const fetchExpiringPolicies = async () => {
+    try {
+      const response = await fetch(`/api/health/policies/expiring?userId=${user?.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setExpiringPolicies(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch expiring policies:", error);
+    } finally {
+      setLoadingExpiring(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -57,6 +90,62 @@ export default function DashboardPage() {
               Here's an overview of your account and quick actions
             </p>
           </div>
+
+          {/* Expiring Policies Alert */}
+          {!loadingExpiring && expiringPolicies.length > 0 && (
+            <Card className="mb-8 border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-900 dark:text-orange-100">
+                  <AlertCircle className="h-5 w-5" />
+                  Health Policy Renewal Reminder
+                </CardTitle>
+                <CardDescription className="text-orange-700 dark:text-orange-300">
+                  You have {expiringPolicies.length} health {expiringPolicies.length === 1 ? "policy" : "policies"} expiring within 30 days
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {expiringPolicies.slice(0, 3).map((policy) => (
+                    <div key={policy.id} className="flex items-center justify-between bg-white dark:bg-zinc-900 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 dark:bg-orange-950/50 rounded-lg">
+                          <Heart className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{policy.plan.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Policy #{policy.policyNumber}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                          Expires in {policy.daysUntilExpiry} {policy.daysUntilExpiry === 1 ? "day" : "days"}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          onClick={() => router.push("/health/policies")}
+                          className="bg-orange-600 hover:bg-orange-700"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Renew
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {expiringPolicies.length > 3 && (
+                  <Button
+                    variant="link"
+                    className="mt-4 text-orange-700 dark:text-orange-300"
+                    onClick={() => router.push("/health/policies")}
+                  >
+                    View all {expiringPolicies.length} expiring policies →
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Insurance Actions */}
           <div className="mb-8">
