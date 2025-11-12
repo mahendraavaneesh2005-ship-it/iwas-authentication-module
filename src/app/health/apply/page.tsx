@@ -108,7 +108,7 @@ export default function HealthInsuranceApplicationPage() {
       }
 
       toast.success("Application submitted successfully!");
-      router.push(`/health/plans?applicationId=${data.id}`);
+      router.push(`/health/plans?applicationId=₹{data.id}`);
     } catch (error) {
       console.error("Submission error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to submit application");
@@ -144,7 +144,7 @@ export default function HealthInsuranceApplicationPage() {
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div 
               className="h-full bg-blue-600 transition-all duration-300"
-              style={{ width: `${progress}%` }}
+              style={{ width: `₹{progress}%` }}
             />
           </div>
         </div>

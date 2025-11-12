@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "iwas-backend",
   "version": "1.0.0",
   "main": "src/index.js",
@@ -19,6 +19,6 @@
     "mongoose": "^8.0.4"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.10"
   }
 }

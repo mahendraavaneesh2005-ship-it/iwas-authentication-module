@@ -6,19 +6,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, CreditCard, CheckCircle2, Shield, DollarSign, Calendar } from "lucide-react";
+import { ArrowLeft, CreditCard, CheckCircle2, Shield, IndianRupee, Calendar } from "lucide-react";
 import Link from "next/link";
 
 interface HealthPlan {
   id: number;
   planName: string;
   planType: string;
-  coverageAmount: number;
-  monthlyPremiumBase: number;
-  annualDeductible: number;
-  copayAmount: number;
-  outOfPocketMax: number;
-  description: string | null;
+  coverageAmount?: number;
+  monthlyPremiumBase?: number;
+  annualDeductible?: number;
+  copayAmount?: number;
+  outOfPocketMax?: number;
+  description?: string | null;
 }
 
 export default function HealthPaymentPage() {
@@ -39,29 +39,21 @@ export default function HealthPaymentPage() {
       router.push("/login?redirect=/health/payment");
       return;
     }
-
     if (!applicationId || !planId || !amount) {
       toast.error("Missing required payment information");
       router.push("/health/plans");
       return;
     }
-
     fetchPlanDetails();
   }, [user, applicationId, planId, amount, router]);
 
   const fetchPlanDetails = async () => {
     if (!planId) return;
-
     try {
       const response = await fetch("/api/health/plans");
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch plan details");
-      }
-
+      if (!response.ok) throw new Error("Failed to fetch plan details");
       const plans = await response.json();
       const selectedPlan = plans.find((p: HealthPlan) => p.id === parseInt(planId));
-      
       if (selectedPlan) {
         setPlan(selectedPlan);
       } else {
@@ -78,14 +70,11 @@ export default function HealthPaymentPage() {
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!applicationId || !amount || !user) {
       toast.error("Missing required payment information");
       return;
     }
-
     setIsProcessing(true);
-
     try {
       const response = await fetch("/api/health/payments", {
         method: "POST",
@@ -97,13 +86,8 @@ export default function HealthPaymentPage() {
           userId: user.id,
         }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Payment processing failed");
-      }
-
+      if (!response.ok) throw new Error(data.error || "Payment processing failed");
       toast.success("Payment successful! Your policy has been issued.");
       router.push(`/health/policies?new=true&policyId=${data.id}`);
     } catch (error) {
@@ -114,9 +98,7 @@ export default function HealthPaymentPage() {
     }
   };
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   if (loading) {
     return (
@@ -141,6 +123,12 @@ export default function HealthPaymentPage() {
       </div>
     );
   }
+
+  // Format all prices as INR
+  const formatAmount = (x: any) =>
+    isNaN(Number(x)) ? "N/A" : `₹${Number(x).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  const formatAmountShort = (x: any) =>
+    isNaN(Number(x)) ? "N/A" : `₹${Number(x).toLocaleString("en-IN")}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
@@ -175,21 +163,21 @@ export default function HealthPaymentPage() {
                     <Shield className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-muted-foreground">Coverage Amount:</span>
                     <span className="font-medium text-foreground ml-auto">
-                      ${plan.coverageAmount.toLocaleString()}
+                      {plan.coverageAmount ? formatAmountShort(plan.coverageAmount) : "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <IndianRupee className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-muted-foreground">Annual Deductible:</span>
                     <span className="font-medium text-foreground ml-auto">
-                      ${plan.annualDeductible.toLocaleString()}
+                      {plan.annualDeductible ? formatAmountShort(plan.annualDeductible) : "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-muted-foreground">Copay Amount:</span>
                     <span className="font-medium text-foreground ml-auto">
-                      ${plan.copayAmount}
+                      {plan.copayAmount ? formatAmountShort(plan.copayAmount) : "N/A"}
                     </span>
                   </div>
                 </div>
@@ -199,15 +187,13 @@ export default function HealthPaymentPage() {
               <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-muted-foreground">Monthly Premium</span>
-                  <span className="text-foreground">${parseFloat(amount).toFixed(2)}</span>
+                  <span className="text-foreground">{formatAmount(amount)}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg font-bold">
                   <span className="text-foreground">Total Due Today</span>
-                  <span className="text-blue-600">${parseFloat(amount).toFixed(2)}</span>
+                  <span className="text-blue-600">{formatAmount(amount)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  First month premium payment
-                </p>
+                <p className="text-xs text-muted-foreground mt-2">First month premium payment</p>
               </div>
 
               {/* Coverage Info */}
@@ -247,7 +233,6 @@ export default function HealthPaymentPage() {
                       <CreditCard className="h-5 w-5 text-blue-600" />
                       <span className="font-medium text-foreground">Credit Card</span>
                     </label>
-
                     <label className="flex items-center gap-3 p-4 border-2 border-border rounded-lg cursor-pointer hover:border-blue-300 dark:hover:border-blue-800 transition-colors">
                       <input
                         type="radio"
@@ -260,7 +245,6 @@ export default function HealthPaymentPage() {
                       <CreditCard className="h-5 w-5 text-blue-600" />
                       <span className="font-medium text-foreground">Debit Card</span>
                     </label>
-
                     <label className="flex items-center gap-3 p-4 border-2 border-border rounded-lg cursor-pointer hover:border-blue-300 dark:hover:border-blue-800 transition-colors">
                       <input
                         type="radio"
@@ -270,8 +254,19 @@ export default function HealthPaymentPage() {
                         onChange={(e) => setPaymentMethod(e.target.value)}
                         className="w-4 h-4 text-blue-600"
                       />
-                      <DollarSign className="h-5 w-5 text-blue-600" />
+                      <IndianRupee className="h-5 w-5 text-blue-600" />
                       <span className="font-medium text-foreground">Bank Transfer</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 border-2 border-border rounded-lg cursor-pointer hover:border-blue-300 dark:hover:border-blue-800 transition-colors">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="upi"
+                        checked={paymentMethod === "upi"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="font-medium text-foreground">UPI</span>
                     </label>
                   </div>
                 </div>
@@ -279,18 +274,12 @@ export default function HealthPaymentPage() {
                 {/* Payment Info Note */}
                 <div className="p-4 bg-muted rounded-lg">
                   <p className="text-sm text-muted-foreground">
-                    <strong className="text-foreground">Note:</strong> This is a demo payment form. 
-                    In a production environment, this would integrate with a payment gateway like Stripe or PayPal.
+                    <strong className="text-foreground">Note:</strong> This is a demo payment form. In production, this would integrate with a gateway like Stripe/PayPal/UPI.
                   </p>
                 </div>
 
                 {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={isProcessing}
-                  className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base"
-                  size="lg"
-                >
+                <Button type="submit" disabled={isProcessing} className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base" size="lg">
                   {isProcessing ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -299,7 +288,7 @@ export default function HealthPaymentPage() {
                   ) : (
                     <>
                       <CheckCircle2 className="h-5 w-5 mr-2" />
-                      Pay ${parseFloat(amount).toFixed(2)}
+                      Pay {formatAmount(amount)}
                     </>
                   )}
                 </Button>

@@ -4,17 +4,23 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, Car, User, FileText, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import {
+  Shield, User, Settings, TrendingUp, FileText, Plus, AlertCircle, Heart, RefreshCw, IndianRupee,
+  Car, ArrowLeft,ArrowRight,Check, Clock
+} from "lucide-react";
+
 import { toast } from "sonner";
-import { VehicleApplication, VehicleType, CoverageType } from "@/types/insurance";
 import { calculatePremium } from "@/lib/premiumCalculator";
+import { VehicleApplication, VehicleType, CoverageType } from "@/types/insurance";
 import Link from "next/link";
+
 
 export default function InsuranceApplicationPage() {
   const { user } = useAuth();
@@ -73,7 +79,7 @@ export default function InsuranceApplicationPage() {
     } else if (step === 3) {
       if (!formData.coverageType) newErrors.coverageType = "Coverage type is required";
       if (!formData.coverageAmount || formData.coverageAmount < 10000) {
-        newErrors.coverageAmount = "Coverage amount must be at least $10,000";
+        newErrors.coverageAmount = "Coverage amount must be at least ₹10,000";
       }
       if (!formData.deductible) newErrors.deductible = "Deductible is required";
     }
@@ -129,7 +135,7 @@ export default function InsuranceApplicationPage() {
       localStorage.setItem("applications", JSON.stringify(applications));
 
       toast.success("Application submitted successfully!");
-      router.push(`/insurance/premium/${application.id}`);
+      router.push(`/insurance/premium/₹{application.id}`);
     } catch (error) {
       toast.error("Failed to submit application");
     } finally {
@@ -184,7 +190,7 @@ export default function InsuranceApplicationPage() {
                 <div key={step.number} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${
+                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ₹{
                         currentStep >= step.number
                           ? "bg-blue-600 border-blue-600 text-white"
                           : "bg-white dark:bg-zinc-900 border-border text-muted-foreground"
@@ -196,13 +202,13 @@ export default function InsuranceApplicationPage() {
                         <step.icon className="h-6 w-6" />
                       )}
                     </div>
-                    <p className={`text-sm font-medium mt-2 ${currentStep >= step.number ? "text-foreground" : "text-muted-foreground"}`}>
+                    <p className={`text-sm font-medium mt-2 ₹{currentStep >= step.number ? "text-foreground" : "text-muted-foreground"}`}>
                       {step.title}
                     </p>
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`h-0.5 flex-1 mx-4 transition-all ${
+                      className={`h-0.5 flex-1 mx-4 transition-all ₹{
                         currentStep > step.number ? "bg-blue-600" : "bg-border"
                       }`}
                     />
@@ -437,11 +443,11 @@ export default function InsuranceApplicationPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="50000">$50,000</SelectItem>
-                        <SelectItem value="100000">$100,000</SelectItem>
-                        <SelectItem value="250000">$250,000</SelectItem>
-                        <SelectItem value="500000">$500,000</SelectItem>
-                        <SelectItem value="1000000">$1,000,000</SelectItem>
+                        <SelectItem value="50000">₹50,000</SelectItem>
+                        <SelectItem value="100000">₹100,000</SelectItem>
+                        <SelectItem value="250000">₹250,000</SelectItem>
+                        <SelectItem value="500000">₹500,000</SelectItem>
+                        <SelectItem value="1000000">₹1,000,000</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.coverageAmount && <p className="text-sm text-red-500">{errors.coverageAmount}</p>}
@@ -457,10 +463,10 @@ export default function InsuranceApplicationPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="250">$250</SelectItem>
-                        <SelectItem value="500">$500</SelectItem>
-                        <SelectItem value="1000">$1,000</SelectItem>
-                        <SelectItem value="2000">$2,000</SelectItem>
+                        <SelectItem value="250">₹250</SelectItem>
+                        <SelectItem value="500">₹500</SelectItem>
+                        <SelectItem value="1000">₹1,000</SelectItem>
+                        <SelectItem value="2000">₹2,000</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.deductible && <p className="text-sm text-red-500">{errors.deductible}</p>}

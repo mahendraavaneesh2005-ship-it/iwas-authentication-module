@@ -1,14 +1,21 @@
 "use client";
 
-import ProtectedRoute from "@/components/ProtectedRoute";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, Settings, TrendingUp, FileText, Car, Plus, AlertCircle, Heart, RefreshCw } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+
+import {
+  Shield, User, Settings, TrendingUp, FileText, Plus,
+  AlertCircle, Heart, RefreshCw, DollarSign, Clock
+} from "lucide-react";
+
+import Link from "next/link";
+
 
 interface ExpiringPolicy {
   id: number;
@@ -82,6 +89,7 @@ export default function DashboardPage() {
         </header>
 
         <div className="container mx-auto px-6 py-12 max-w-6xl">
+          {/* Welcome Section */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-foreground mb-2">
               Welcome back, {user?.name}!
@@ -147,11 +155,14 @@ export default function DashboardPage() {
             </Card>
           )}
 
-          {/* Insurance Actions */}
+          {/* Insurance Services */}
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-foreground mb-4">Insurance Services</h3>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer border-2 border-blue-200 dark:border-blue-900" onClick={() => router.push("/insurance/apply")}>
+              <Card
+                className="hover:shadow-md transition-shadow cursor-pointer border-2 border-blue-200 dark:border-blue-900"
+                onClick={() => router.push("/insurance/apply")}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
@@ -216,11 +227,33 @@ export default function DashboardPage() {
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/insurance/premium")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <DollarSign className="h-5 w-5 text-blue-600" />
+                    </div>
+                    Premium Calculation
+                  </CardTitle>
+                  <CardDescription>View your insurance premium calculations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Review detailed breakdowns of your insurance premiums.
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link href="/insurance/premium">
+                      View Premiums →
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
+          {/* Quick Stats and Actions */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-            {/* Profile Card */}
             <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/profile")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -246,7 +279,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -275,7 +307,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Settings Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

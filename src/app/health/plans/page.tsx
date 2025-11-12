@@ -5,22 +5,22 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Shield, DollarSign, Calendar, TrendingUp } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Shield, IndianRupee, Calendar, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 interface HealthPlan {
   id: number;
   planName: string;
   planType: string;
-  coverageAmount: number;
-  monthlyPremiumBase: number;
-  annualDeductible: number;
-  copayAmount: number;
-  outOfPocketMax: number;
-  coverageDetails: string | null;
-  description: string | null;
-  createdAt: string;
-  updatedAt: string;
+  coverageAmount?: number;
+  monthlyPremiumBase?: number;
+  annualDeductible?: number;
+  copayAmount?: number;
+  outOfPocketMax?: number;
+  coverageDetails?: string | null;
+  description?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function HealthPlansPage() {
@@ -32,7 +32,7 @@ export default function HealthPlansPage() {
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [calculatedPremium, setCalculatedPremium] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const applicationId = searchParams.get("applicationId");
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function HealthPlansPage() {
   const fetchPlans = async () => {
     try {
       const response = await fetch("/api/health/plans");
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch health plans");
       }
@@ -63,16 +63,13 @@ export default function HealthPlansPage() {
   };
 
   const calculatePremium = (plan: HealthPlan) => {
-    // Premium calculation logic based on plan base premium
-    // In a real application, this would factor in age, health conditions, etc.
-    const basePremium = plan.monthlyPremiumBase;
-    
-    // Simple calculation for demo - could be enhanced with risk factors
+    const basePremium = plan.monthlyPremiumBase || 0;
+    // Enhance calculation logic if desired
     const calculated = basePremium;
-    
+
     setSelectedPlan(plan.id);
     setCalculatedPremium(calculated);
-    toast.success(`Premium calculated: $${calculated.toFixed(2)}/month`);
+    toast.success(`Premium calculated: ₹₹{calculated.toFixed(2)}/month`);
   };
 
   const handleProceedToPayment = async () => {
@@ -84,8 +81,7 @@ export default function HealthPlansPage() {
     setIsProcessing(true);
 
     try {
-      // Update the application with selected plan and premium
-      const response = await fetch(`/api/health/applications/${applicationId}`, {
+      const response = await fetch(`/api/health/applications/₹{applicationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,12 +90,10 @@ export default function HealthPlansPage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update application");
-      }
+      if (!response.ok) throw new Error("Failed to update application");
 
       toast.success("Plan selected! Proceeding to payment...");
-      router.push(`/health/payment?applicationId=${applicationId}&planId=${selectedPlan}&amount=${calculatedPremium}`);
+      router.push(`/health/payment?applicationId=₹{applicationId}&planId=₹{selectedPlan}&amount=₹{calculatedPremium}`);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to proceed to payment");
@@ -108,9 +102,7 @@ export default function HealthPlansPage() {
     }
   };
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   if (loading) {
     return (
@@ -143,7 +135,7 @@ export default function HealthPlansPage() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border-2 transition-all ${
+              className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border-2 transition-all₹₹{
                 selectedPlan === plan.id
                   ? "border-blue-600 shadow-lg"
                   : "border-border hover:border-blue-300 dark:hover:border-blue-800"
@@ -167,7 +159,7 @@ export default function HealthPlansPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-bold text-foreground">
-                      ${plan.monthlyPremiumBase.toFixed(0)}
+                      ₹{plan.monthlyPremiumBase ? plan.monthlyPremiumBase.toFixed(0) : "N/A"}
                     </span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
@@ -178,25 +170,25 @@ export default function HealthPlansPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <Shield className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-foreground">
-                      Coverage: <strong>${plan.coverageAmount.toLocaleString()}</strong>
+                      Coverage: <strong>₹{plan.coverageAmount ? plan.coverageAmount.toLocaleString() : "N/A"}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <IndianRupee className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-foreground">
-                      Deductible: <strong>${plan.annualDeductible.toLocaleString()}</strong>
+                      Deductible: <strong>₹{plan.annualDeductible ? plan.annualDeductible.toLocaleString() : "N/A"}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-foreground">
-                      Copay: <strong>${plan.copayAmount}</strong>
+                      Copay: <strong>₹{plan.copayAmount ?? "N/A"}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <TrendingUp className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-foreground">
-                      Max Out-of-Pocket: <strong>${plan.outOfPocketMax.toLocaleString()}</strong>
+                      Max Out-of-Pocket: <strong>₹{plan.outOfPocketMax ? plan.outOfPocketMax.toLocaleString() : "N/A"}</strong>
                     </span>
                   </div>
                 </div>
@@ -217,9 +209,9 @@ export default function HealthPlansPage() {
                         <p className="text-sm font-medium text-green-900 dark:text-green-100">
                           Plan Selected
                         </p>
-                        {calculatedPremium && (
+                        {calculatedPremium !== null && (
                           <p className="text-xs text-green-700 dark:text-green-200">
-                            Premium: ${calculatedPremium.toFixed(2)}/month
+                            Premium: ₹{calculatedPremium.toFixed(2)}/month
                           </p>
                         )}
                       </div>
@@ -239,7 +231,7 @@ export default function HealthPlansPage() {
         </div>
 
         {/* Proceed to Payment */}
-        {selectedPlan && calculatedPremium && (
+        {selectedPlan !== null && calculatedPremium !== null && (
           <div className="max-w-3xl mx-auto">
             <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-border p-6">
               <div className="flex items-center justify-between">

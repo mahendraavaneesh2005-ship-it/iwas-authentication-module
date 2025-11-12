@@ -4,15 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, CreditCard, ArrowLeft, Check, Lock, AlertCircle } from "lucide-react";
-import { VehicleApplication, Policy, Payment } from "@/types/insurance";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+
+import { Policy } from "@/types/insurance";
+
+import {
+  Shield, User, Settings, TrendingUp, FileText, Plus,
+  AlertCircle, Heart, RefreshCw, IndianRupee, CreditCard, ArrowLeft, Clock
+} from "lucide-react";
+
 import Link from "next/link";
+
 
 export default function PaymentPage() {
   const { user } = useAuth();
@@ -52,7 +57,7 @@ export default function PaymentPage() {
     if (paymentData.paymentMethod !== "bank_transfer") {
       // Validate card number (16 digits)
       const cardNum = paymentData.cardNumber.replace(/\s/g, "");
-      if (!cardNum || cardNum.length !== 16 || !/^\d+$/.test(cardNum)) {
+      if (!cardNum || cardNum.length !== 16 || !/^\d+₹/.test(cardNum)) {
         newErrors.cardNumber = "Please enter a valid 16-digit card number";
       }
 
@@ -70,7 +75,7 @@ export default function PaymentPage() {
       }
 
       // Validate CVV (3-4 digits)
-      if (!paymentData.cvv || !/^\d{3,4}$/.test(paymentData.cvv)) {
+      if (!paymentData.cvv || !/^\d{3,4}₹/.test(paymentData.cvv)) {
         newErrors.cvv = "Please enter a valid CVV";
       }
     }
@@ -89,7 +94,7 @@ export default function PaymentPage() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Create policy
-      const policyNumber = `POL-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      const policyNumber = `POL-₹{Date.now()}-₹{Math.random().toString(36).substring(7).toUpperCase()}`;
       const startDate = new Date();
       const endDate = new Date();
       endDate.setFullYear(endDate.getFullYear() + 1);
@@ -128,7 +133,7 @@ export default function PaymentPage() {
         status: "completed",
         method: paymentData.paymentMethod,
         cardLast4: paymentData.cardNumber.slice(-4),
-        transactionId: `TXN-${Date.now()}`,
+        transactionId: `TXN-₹{Date.now()}`,
         paidAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       };
@@ -212,7 +217,7 @@ export default function PaymentPage() {
                 </div>
               </Link>
               <Button variant="ghost" asChild>
-                <Link href={`/insurance/premium/${application.id}`}>
+                <Link href={`/insurance/premium/₹{application.id}`}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Premium
                 </Link>
@@ -373,7 +378,7 @@ export default function PaymentPage() {
                     ) : (
                       <>
                         <Check className="h-5 w-5 mr-2" />
-                        Pay ${application.finalPremium?.toLocaleString()}
+                        Pay ₹{application.finalPremium?.toLocaleString()}
                       </>
                     )}
                   </Button>
@@ -402,21 +407,21 @@ export default function PaymentPage() {
 
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Coverage Amount</p>
-                    <p className="font-semibold">${application.coverageAmount.toLocaleString()}</p>
+                    <p className="font-semibold">₹{application.coverageAmount.toLocaleString()}</p>
                   </div>
 
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Deductible</p>
-                    <p className="font-semibold">${application.deductible.toLocaleString()}</p>
+                    <p className="font-semibold">₹{application.deductible.toLocaleString()}</p>
                   </div>
 
                   <div className="border-t pt-4">
                     <p className="text-sm text-muted-foreground mb-1">Annual Premium</p>
                     <p className="text-2xl font-bold text-blue-600">
-                      ${application.finalPremium?.toLocaleString()}
+                      ₹{application.finalPremium?.toLocaleString()}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      ${monthlyPremium}/month
+                      ₹{monthlyPremium}/month
                     </p>
                   </div>
 

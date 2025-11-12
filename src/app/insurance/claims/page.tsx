@@ -1,15 +1,24 @@
 "use client";
 
-import ProtectedRoute from "@/components/ProtectedRoute";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Plus, FileText, Clock, CheckCircle2, XCircle, DollarSign } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+
 import { toast } from "sonner";
+
+
+import {
+  Shield, User, Settings, TrendingUp, FileText, Plus, AlertCircle, Heart, RefreshCw, IndianRupee,
+  Car, ArrowLeft, Clock,XCircle,CheckCircle2
+} from "lucide-react";
+
+
+import Link from "next/link";
 
 interface Claim {
   id: number;
@@ -58,7 +67,7 @@ const statusConfig = {
   paid: {
     label: "Paid",
     color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-    icon: DollarSign,
+    icon: IndianRupee,
   },
 };
 
@@ -78,7 +87,7 @@ export default function ClaimsPage() {
     if (!user) return;
 
     try {
-      const response = await fetch(`/api/claims?userId=${user.id}`);
+      const response = await fetch(`/api/claims?userId=₹{user.id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch claims");
       }

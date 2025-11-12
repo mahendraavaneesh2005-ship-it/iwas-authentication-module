@@ -4,12 +4,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Shield, ArrowLeft, FileText, Calendar, DollarSign, Car, CheckCircle, XCircle, Clock, Plus } from "lucide-react";
-import { Policy } from "@/types/insurance";
+
+
+import {
+  Shield, User, Settings, TrendingUp, FileText, Plus, AlertCircle, Heart, RefreshCw, IndianRupee,
+  Car, ArrowLeft,CheckCircle, Clock
+} from "lucide-react";
+
+
 import Link from "next/link";
+
 
 export default function PoliciesPage() {
   const { user } = useAuth();
@@ -172,10 +179,10 @@ export default function PoliciesPage() {
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Total Premium</p>
                       <p className="text-2xl font-bold">
-                        ${policies.filter((p) => p.status === "active").reduce((sum, p) => sum + p.premium, 0).toLocaleString()}
+                        ₹{policies.filter((p) => p.status === "active").reduce((sum, p) => sum + p.premium, 0).toLocaleString()}
                       </p>
                     </div>
-                    <DollarSign className="h-8 w-8 text-blue-600" />
+                    <IndianRupee className="h-8 w-8 text-blue-600" />
                   </div>
                 </CardContent>
               </Card>
@@ -222,8 +229,8 @@ export default function PoliciesPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground mb-1">Annual Premium</p>
-                        <p className="text-2xl font-bold text-blue-600">${policy.premium.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">${Math.round(policy.premium / 12)}/month</p>
+                        <p className="text-2xl font-bold text-blue-600">₹{policy.premium.toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">₹{Math.round(policy.premium / 12)}/month</p>
                       </div>
                     </div>
                   </CardHeader>
@@ -247,7 +254,7 @@ export default function PoliciesPage() {
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Coverage</p>
                           <p className="font-semibold capitalize">{policy.coverageType}</p>
-                          <p className="text-sm text-muted-foreground">${policy.coverageAmount.toLocaleString()}</p>
+                          <p className="text-sm text-muted-foreground">₹{policy.coverageAmount.toLocaleString()}</p>
                         </div>
                       </div>
 
