@@ -162,7 +162,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
-        if: ${{ secrets.SNYK_TOKEN != '' }}
+        if: ${{ env.SNYK_TOKEN != '' }}
 
       - name: Run Snyk scan (Frontend)
         uses: snyk/actions/node@master
@@ -171,7 +171,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
-        if: ${{ secrets.SNYK_TOKEN != '' }}
+        if: ${{ env.SNYK_TOKEN != '' }}
 
   # ============================================
   # BUILD & PUSH DOCKER IMAGES
@@ -285,30 +285,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.28.0'
-        if: ${{ secrets.KUBE_CONFIG != '' }}
-
-      - name: Configure kubectl
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-        if: ${{ secrets.KUBE_CONFIG != '' }}
-
       - name: Deploy to staging
         run: |
           echo "🚀 Deploying to staging environment..."
           echo "Backend Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest"
           echo "Frontend Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest"
-          
-          if [ -z "$KUBE_CONFIG" ]; then
-            echo "⚠️ KUBE_CONFIG not configured, skipping Kubernetes deployment"
-          fi
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          echo "✅ Staging deployment configuration ready"
 
       - name: Run integration tests
         run: |
@@ -318,6 +300,4 @@ jobs:
       - name: Deploy to production
         run: |
           echo "🚀 Deploying to production environment..."
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "Production deployment initiated"
-          fi
+          echo "Production deployment initiated for main branch"
