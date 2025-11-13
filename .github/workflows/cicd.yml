@@ -97,7 +97,10 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install frontend dependencies
-        run: npm ci
+        env:
+          NPM_CONFIG_LEGACY_PEER_DEPS: true
+        run: |
+          npm ci || npm i --no-audit --no-fund --legacy-peer-deps
 
       - name: Run linting
         run: |
