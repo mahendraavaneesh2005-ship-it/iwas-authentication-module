@@ -1,16 +1,14 @@
-import { FlatCompat } from '@eslint/eslintrc'
- 
-const compat = new FlatCompat({
-  // import.meta.dirname is available after Node.js v20.11.0
-  baseDirectory: import.meta.dirname,
-})
- 
-const eslintConfig = [
-  ...compat.config({
-    extends: ['next'],
-    plugins: ['import'],
-  }),
+import next from 'eslint-config-next'
+import importPlugin from 'eslint-plugin-import'
+
+/** @type {import('eslint').Linter.FlatConfig[]} */
+export default [
+  // Use Next.js flat config preset (compatible with ESLint v9)
+  ...next,
   {
+    plugins: {
+      import: importPlugin,
+    },
     rules: {
       'react/no-unescaped-entities': 'off',
       '@next/next/no-img-element': 'off',
@@ -29,5 +27,3 @@ const eslintConfig = [
     },
   },
 ]
- 
-export default eslintConfig
