@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const HealthPolicySchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -17,4 +17,4 @@ const HealthPolicySchema = new mongoose.Schema({
   updatedAt: Date
 });
 
-module.exports = mongoose.model('HealthPolicy', HealthPolicySchema);
+export default mongoose.models.HealthPolicy || mongoose.model('HealthPolicy', HealthPolicySchema);

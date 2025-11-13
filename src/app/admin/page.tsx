@@ -1,16 +1,22 @@
-// src/app/admin/page.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/useAuth"; // adjust path if your context path differs
+import React, { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/contexts/useAuth";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type UserItem = {
   _id: string;
-  id?: string; // some parts of code use id, some use _id
+  id?: string;
   name: string;
   email: string;
   role: "user" | "admin" | "insurer";
+  createdAt?: string;
 };
 
 const ROLE_OPTIONS: UserItem["role"][] = ["user", "insurer", "admin"];
@@ -20,52 +26,70 @@ export default function AdminUsersPage() {
   const router = useRouter();
   const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-  const [users, setUsers] = useState<UserItem[] | null>(null);
+  const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | UserItem["role"]>("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const [pendingRoles, setPendingRoles] = useState<Record<string, UserItem["role"]>>({});
 
-  // block non-admins
+  // Guard: require login and admin
   useEffect(() => {
-    if (!isLoading && !user) {
-      // not logged in — redirect to login
-      router.push("/login");
-    }
-    // if user exists but not admin, leave them on page and show denied message
+    if (!isLoading && !user) router.push("/login");
   }, [user, isLoading, router]);
 
-  // fetch users
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/admin/users`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const res = await fetch(`${API}/api/admin/users`, { method: "GET", credentials: "include" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || "Failed to load users");
       }
       const data = await res.json();
-      // data.users is expected
-      setUsers(data.users || []);
+      setUsers((data.users || []) as UserItem[]);
     } catch (e: any) {
-      console.error("Failed to fetch users:", e);
-      alert("Error loading users: " + (e.message || e));
+      console.error(e);
+      toast.error(e.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user && user.role === "admin") {
-      fetchUsers();
-    }
+    if (user?.role === "admin") fetchUsers();
   }, [user]);
 
-  // role change handler
-  const handleRoleChange = async (userId: string, newRole: UserItem["role"]) => {
-    if (!confirm(`Change role of user to "${newRole}"?`)) return;
+  // Derived data: stats, filtered, paginated
+  const stats = useMemo(() => {
+    const total = users.length;
+    const admins = users.filter(u => u.role === "admin").length;
+    const insurers = users.filter(u => u.role === "insurer").length;
+    const basic = users.filter(u => u.role === "user").length;
+    return { total, admins, insurers, basic };
+  }, [users]);
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let list = users;
+    if (roleFilter !== "all") list = list.filter(u => u.role === roleFilter);
+    if (q) list = list.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    return list;
+  }, [users, query, roleFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const onSelectRole = (id: string, role: UserItem["role"]) => {
+    setPendingRoles(prev => ({ ...prev, [id]: role }));
+  };
+
+  const saveRole = async (userId: string) => {
+    const newRole = pendingRoles[userId];
+    if (!newRole) return;
     setSavingId(userId);
     try {
       const res = await fetch(`${API}/api/admin/users/${userId}/role`, {
@@ -75,96 +99,194 @@ export default function AdminUsersPage() {
         body: JSON.stringify({ role: newRole }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to update role");
-      }
-      // success — update local list
-      setUsers(prev => prev ? prev.map(u => (u._id === userId || u.id === userId ? { ...u, role: newRole } : u)) : prev);
-      alert("Role updated successfully");
+      if (!res.ok) throw new Error(data.message || "Failed to update role");
+      setUsers(prev => prev.map(u => (u._id === userId || u.id === userId ? { ...u, role: newRole } : u)));
+      setPendingRoles(prev => {
+        const clone = { ...prev };
+        delete clone[userId];
+        return clone;
+      });
+      toast.success("Role updated");
     } catch (e: any) {
-      console.error("update role error", e);
-      alert("Error updating role: " + (e.message || e));
+      console.error(e);
+      toast.error(e.message || "Error updating role");
     } finally {
       setSavingId(null);
     }
   };
 
-  // simple table UI
+  const resetRole = (userId: string) => {
+    setPendingRoles(prev => {
+      const clone = { ...prev };
+      delete clone[userId];
+      return clone;
+    });
+  };
+
+  const exportCSV = () => {
+    const headers = ["name", "email", "role"];
+    const rows = filtered.map(u => [u.name, u.email, u.role]);
+    const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "users.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (user.role !== "admin") {
+    return (
+      <div className="p-6">
+        <Card className="border-destructive/30 bg-destructive/10">
+          <CardHeader>
+            <CardTitle className="text-destructive">Access denied</CardTitle>
+          </CardHeader>
+          <CardContent>Only admins can view this page.</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 32, marginBottom: 6 }}>Admin — Role Management</h1>
-      <p style={{ color: "#666", marginBottom: 20 }}>
-        Only admins may view and change user roles.
-      </p>
-
-      {isLoading || !user ? (
-        <div>Loading auth...</div>
-      ) : user.role !== "admin" ? (
-        <div style={{ padding: 20, borderRadius: 8, background: "#fff6f6", color: "#8b0000" }}>
-          Access denied — you must be an admin to view this page.
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => fetchUsers()} disabled={loading}>
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
+          <Button variant="secondary" onClick={exportCSV}>Export CSV</Button>
         </div>
-      ) : (
-        <>
-          <div style={{ marginBottom: 12 }}>
-            <button onClick={() => fetchUsers()} disabled={loading} style={{ padding: "8px 12px" }}>
-              {loading ? "Refreshing..." : "Refresh list"}
-            </button>
-          </div>
+      </div>
 
-          <div style={{ overflowX: "auto", background: "#fff", borderRadius: 8, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
-              <thead>
-                <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
-                  <th style={{ padding: "12px 16px" }}>Name</th>
-                  <th style={{ padding: "12px 16px" }}>Email</th>
-                  <th style={{ padding: "12px 16px" }}>Role</th>
-                  <th style={{ padding: "12px 16px" }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users && users.length > 0 ? (
-                  users.map(u => {
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Users</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{stats.total}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Admins</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{stats.admins}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Insurers</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{stats.insurers}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Users</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{stats.basic}</CardContent>
+        </Card>
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="flex-1">
+          <Input
+            placeholder="Search by name or email"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+          />
+        </div>
+        <div className="w-full sm:w-56">
+          <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v as any); setPage(1); }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All roles</SelectItem>
+              {ROLE_OPTIONS.map(r => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="min-w-[160px]">Role</TableHead>
+                  <TableHead className="w-[200px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">No users found.</TableCell>
+                  </TableRow>
+                ) : (
+                  pageItems.map((u) => {
                     const id = u._id || u.id!;
+                    const current = pendingRoles[id] ?? u.role;
+                    const dirty = pendingRoles[id] !== undefined && pendingRoles[id] !== u.role;
+                    const disabled = savingId === id;
                     return (
-                      <tr key={id} style={{ borderBottom: "1px solid #f5f5f5" }}>
-                        <td style={{ padding: "12px 16px" }}>{u.name}</td>
-                        <td style={{ padding: "12px 16px" }}>{u.email}</td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <select
-                            value={u.role}
-                            onChange={(e) => handleRoleChange(id, e.target.value as UserItem["role"])}
-                            disabled={savingId === id}
-                            style={{ padding: "6px 8px", minWidth: 140 }}
-                          >
-                            {ROLE_OPTIONS.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <button
-                            onClick={() => handleRoleChange(id, u.role)}
-                            disabled={savingId === id}
-                            style={{ padding: "6px 8px" }}
-                          >
-                            {savingId === id ? "Saving..." : "Save"}
-                          </button>
-                        </td>
-                      </tr>
+                      <TableRow key={id}>
+                        <TableCell className="font-medium">{u.name}</TableCell>
+                        <TableCell>{u.email}</TableCell>
+                        <TableCell>
+                          <Select value={current} onValueChange={(v) => onSelectRole(id, v as UserItem["role"]) } disabled={disabled}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ROLE_OPTIONS.map(r => (
+                                <SelectItem key={r} value={r}>{r}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => saveRole(id)} disabled={!dirty || disabled}>
+                              {disabled ? "Saving..." : "Save"}
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => resetRole(id)} disabled={!dirty || disabled}>Reset</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     );
                   })
-                ) : (
-                  <tr>
-                    <td colSpan={4} style={{ padding: 20 }}>
-                      No users found.
-                    </td>
-                  </tr>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </>
-      )}
+        </CardContent>
+      </Card>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Previous</Button>
+          <Button variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+        </div>
+      </div>
     </div>
   );
 }

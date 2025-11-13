@@ -59,7 +59,7 @@
 
     const fetchPolicies = async () => {
       try {
-        const response = await fetch(`/api/health/policies?userId=₹{user?.id}`);
+        const response = await fetch(`/api/health/policies?userId=${user?.id}`);
         if (response.ok) {
           const data = await response.json();
           setPolicies(data);
@@ -74,7 +74,7 @@
 
     const fetchExpiringPolicies = async () => {
       try {
-        const response = await fetch(`/api/health/policies/expiring?userId=₹{user?.id}`);
+        const response = await fetch(`/api/health/policies/expiring?userId=${user?.id}`);
         if (response.ok) {
           const data = await response.json();
           setExpiringPolicies(data);
@@ -87,7 +87,7 @@
     const handleRenewPolicy = async (policyId: number) => {
       setRenewingPolicyId(policyId);
       try {
-        const response = await fetch(`/api/health/policies/₹{policyId}/renew`, {
+        const response = await fetch(`/api/health/policies/${policyId}/renew`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -372,7 +372,7 @@
                   const renewable = canRenew(policy.endDate);
 
                   return (
-                    <Card key={policy.id} className={`hover:shadow-md transition-shadow ₹{expiringSoon ? "border-orange-200 dark:border-orange-900" : ""}`}>
+                    <Card key={policy.id} className={`hover:shadow-md transition-shadow ${expiringSoon ? "border-orange-200 dark:border-orange-900" : ""}`}>
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">

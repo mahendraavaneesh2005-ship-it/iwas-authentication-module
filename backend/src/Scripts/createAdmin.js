@@ -18,7 +18,7 @@ const run = async () => {
       process.exit(0);
     }
 
-    const password = process.env.ADMIN_PASSWORD || "Admin@123";
+    const password = process.env.ADMIN_PASSWORD || "Arjun@16";
     const hash = await bcrypt.hash(password.trim(), 10);
 
     await User.create({ name: "Admin", email, password: hash, role: "admin" });

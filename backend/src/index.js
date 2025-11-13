@@ -8,6 +8,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import insuranceRoutes from "./routes/insuranceRoutes.js";
+import healthInsuranceRoutes from "./routes/healthInsuranceRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -21,6 +22,7 @@ app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/insurance", insuranceRoutes);  // Place here after middleware setup
+app.use("/api/health", healthInsuranceRoutes);
 
 app.get("/", (req, res) => res.send("IWAS Backend Running"));
 

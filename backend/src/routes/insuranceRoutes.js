@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.post('/applications', insuranceController.createApplication);
 router.get('/applications', insuranceController.getUserApplications);
+router.get('/applications/:id', insuranceController.getApplicationById);
 
 router.get('/policies', insuranceController.getUserPolicies);
 

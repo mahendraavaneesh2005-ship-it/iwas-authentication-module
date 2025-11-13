@@ -14,6 +14,7 @@ import Link from "next/link";
 export default function HealthInsuranceApplicationPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -92,9 +93,10 @@ export default function HealthInsuranceApplicationPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/health/applications", {
+      const response = await fetch(`${API_URL}/api/health/applications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           userId: user.id,
           ...formData,
@@ -108,7 +110,7 @@ export default function HealthInsuranceApplicationPage() {
       }
 
       toast.success("Application submitted successfully!");
-      router.push(`/health/plans?applicationId=${data.id}`);
+      router.push(`/health/plans?applicationId=${data._id}`);
 
     } catch (error) {
       console.error("Submission error:", error);
@@ -145,7 +147,7 @@ export default function HealthInsuranceApplicationPage() {
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div 
               className="h-full bg-blue-600 transition-all duration-300"
-              style={{ width: `₹{progress}%` }}
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>

@@ -25,6 +25,7 @@ export default function HealthPaymentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [plan, setPlan] = useState<HealthPlan | null>(null);
@@ -50,10 +51,10 @@ export default function HealthPaymentPage() {
   const fetchPlanDetails = async () => {
     if (!planId) return;
     try {
-      const response = await fetch("/api/health/plans");
+      const response = await fetch(`${API_URL}/api/health/plans`, { credentials: "include" });
       if (!response.ok) throw new Error("Failed to fetch plan details");
       const plans = await response.json();
-      const selectedPlan = plans.find((p: HealthPlan) => p.id === parseInt(planId));
+      const selectedPlan = plans.find((p: any) => (p._id || p.id?.toString()) === planId);
       if (selectedPlan) {
         setPlan(selectedPlan);
       } else {
@@ -76,20 +77,24 @@ export default function HealthPaymentPage() {
     }
     setIsProcessing(true);
     try {
-      const response = await fetch("/api/health/payments", {
+      const response = await fetch(`${API_URL}/api/health/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
-          applicationId: parseInt(applicationId),
+          applicationId: applicationId,
           paymentMethod,
           paymentAmount: parseFloat(amount),
           userId: user.id,
+          planId,
+          monthlyPremium: parseFloat(amount),
+          coverageAmount: plan?.coverageAmount || 0,
         }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Payment processing failed");
       toast.success("Payment successful! Your policy has been issued.");
-      router.push(`/health/policies?new=true&policyId=${data.id}`);
+      router.push(`/health/policies?new=true&policyId=${data.policyId}`);
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error instanceof Error ? error.message : "Payment processing failed");

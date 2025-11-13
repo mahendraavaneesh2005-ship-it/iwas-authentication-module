@@ -40,10 +40,23 @@ export default function DashboardPage() {
 
   const fetchExpiringPolicies = async () => {
     try {
-      const response = await fetch(`/api/health/policies/expiring?userId=${user?.id}`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      // Optional: when expiring endpoint exists, switch to that. For now, fetch all and compute client-side.
+      const response = await fetch(`${API_URL}/api/health/policies?userId=${user?.id}`, { credentials: "include" });
       if (response.ok) {
-        const data = await response.json();
-        setExpiringPolicies(data);
+        const rows = await response.json();
+        const soon = (rows || []).map((p: any) => {
+          const end = new Date(p.endDate);
+          const now = new Date();
+          const diff = Math.ceil((end.getTime() - now.getTime()) / (1000*60*60*24));
+          return {
+            id: p._id,
+            policyNumber: p.policyNumber,
+            daysUntilExpiry: diff,
+            plan: { name: p.planName || 'Health Plan' },
+          } as ExpiringPolicy;
+        }).filter((x: ExpiringPolicy) => x.daysUntilExpiry > 0 && x.daysUntilExpiry <= 30);
+        setExpiringPolicies(soon);
       }
     } catch (error) {
       console.error("Failed to fetch expiring policies:", error);
@@ -246,6 +259,72 @@ export default function DashboardPage() {
                     <Link href="/insurance/premium">
                       View Premiums →
                     </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Health Insurance */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-foreground mb-4">Health Insurance</h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/health/apply")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <Plus className="h-5 w-5 text-blue-600" />
+                    </div>
+                    New Health Application
+                  </CardTitle>
+                  <CardDescription>Apply for health insurance coverage</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Start a new application and choose a suitable health plan.
+                  </p>
+                  <Button className="bg-blue-600 hover:bg-blue-700" asChild>
+                    <Link href="/health/apply">Apply Now →</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/health/policies")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    My Health Policies
+                  </CardTitle>
+                  <CardDescription>View and manage your health policies</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Access your active health policies, view coverage and renewals.
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link href="/health/policies">View Policies →</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push("/health/claims")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <AlertCircle className="h-5 w-5 text-blue-600" />
+                    </div>
+                    My Health Claims
+                  </CardTitle>
+                  <CardDescription>Submit and track health claims</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    File new claims and monitor their status and payouts.
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link href="/health/claims">View Claims →</Link>
                   </Button>
                 </CardContent>
               </Card>

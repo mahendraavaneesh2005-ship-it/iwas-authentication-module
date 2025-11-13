@@ -7,11 +7,12 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 
 import {
   Shield, User, Settings, TrendingUp, FileText, Plus, AlertCircle, Heart, RefreshCw, IndianRupee,
-  Car, ArrowLeft,CheckCircle, Clock
+  Car, ArrowLeft,CheckCircle, Clock, XCircle, Calendar
 } from "lucide-react";
 
 
@@ -21,15 +22,25 @@ import Link from "next/link";
 export default function PoliciesPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [policies, setPolicies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   useEffect(() => {
-    const storedPolicies = JSON.parse(localStorage.getItem("policies") || "[]");
-    const userPolicies = storedPolicies.filter((policy: Policy) => policy.userId === user?.id);
-    setPolicies(userPolicies);
-    setLoading(false);
-  }, [user?.id]);
+    const fetchPolicies = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/insurance/policies?userId=${user?.id}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to load policies");
+        const data = await res.json();
+        setPolicies(data);
+      } catch (e) {
+        // noop
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.id) fetchPolicies();
+  }, [API_URL, user?.id]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -213,24 +224,22 @@ export default function PoliciesPage() {
           ) : (
             <div className="space-y-4">
               {policies.map((policy) => (
-                <Card key={policy.id} className="hover:shadow-md transition-shadow">
+                <Card key={policy._id || policy.id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-xl">
-                            {policy.vehicleDetails.year} {policy.vehicleDetails.make} {policy.vehicleDetails.model}
-                          </CardTitle>
+                          <CardTitle className="text-xl">Policy {policy.policyNumber}</CardTitle>
                           {getStatusBadge(policy.status)}
                         </div>
                         <CardDescription className="flex items-center gap-2">
-                          <span className="font-mono text-sm">{policy.policyNumber}</span>
+                          <span className="font-mono text-sm">Coverage: {policy.coverageType} • ₹{(policy.coverageAmount || 0).toLocaleString()}</span>
                         </CardDescription>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground mb-1">Annual Premium</p>
-                        <p className="text-2xl font-bold text-blue-600">₹{policy.premium.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">₹{Math.round(policy.premium / 12)}/month</p>
+                        <p className="text-2xl font-bold text-blue-600">₹{(policy.premium || 0).toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">₹{Math.round((policy.premium || 0) / 12)}/month</p>
                       </div>
                     </div>
                   </CardHeader>
@@ -238,23 +247,12 @@ export default function PoliciesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       <div className="flex items-start gap-3">
                         <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                          <Car className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Vehicle Details</p>
-                          <p className="font-semibold">{policy.vehicleDetails.licensePlate}</p>
-                          <p className="text-sm text-muted-foreground font-mono">{policy.vehicleDetails.vin}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
                           <Shield className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Coverage</p>
                           <p className="font-semibold capitalize">{policy.coverageType}</p>
-                          <p className="text-sm text-muted-foreground">₹{policy.coverageAmount.toLocaleString()}</p>
+                          <p className="text-sm text-muted-foreground">₹{(policy.coverageAmount || 0).toLocaleString()}</p>
                         </div>
                       </div>
 
@@ -287,11 +285,9 @@ export default function PoliciesPage() {
                       <Button variant="outline" size="sm" disabled>
                         Download Policy
                       </Button>
-                      {policy.status === "active" && (
-                        <Button variant="outline" size="sm" disabled>
-                          File Claim
-                        </Button>
-                      )}
+                      <Button variant="outline" size="sm" disabled>
+                        File Claim
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

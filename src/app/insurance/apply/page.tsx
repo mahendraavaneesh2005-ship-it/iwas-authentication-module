@@ -27,6 +27,7 @@ export default function InsuranceApplicationPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   const [formData, setFormData] = useState({
     // Vehicle Details
@@ -106,36 +107,36 @@ export default function InsuranceApplicationPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Calculate premium
-      const premiumBreakdown = calculatePremium(formData);
-
-      // Create application
-      const application: VehicleApplication = {
-        id: Math.random().toString(36).substring(7),
-        userId: user?.id || "",
-        ...formData,
-        vehicleType: formData.vehicleType as VehicleType,
-        coverageType: formData.coverageType as CoverageType,
-        status: "submitted",
-        submittedAt: new Date().toISOString(),
-        premiumCalculated: true,
-        basePremium: premiumBreakdown.basePremium,
-        finalPremium: premiumBreakdown.finalPremium,
-        premiumBreakdown,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Store in localStorage
-      const applications = JSON.parse(localStorage.getItem("applications") || "[]");
-      applications.push(application);
-      localStorage.setItem("applications", JSON.stringify(applications));
-
+      const res = await fetch(`${API_URL}/api/insurance/applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          userId: user?.id,
+          vehicleType: formData.vehicleType,
+          make: formData.make,
+          model: formData.model,
+          year: formData.year,
+          vin: formData.vin,
+          licensePlate: formData.licensePlate,
+          color: formData.color,
+          mileage: formData.mileage,
+          driverName: formData.driverName,
+          driverLicense: formData.driverLicense,
+          driverAge: formData.driverAge,
+          driverExperience: formData.driverExperience,
+          coverageType: formData.coverageType,
+          coverageAmount: formData.coverageAmount,
+          deductible: formData.deductible,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to submit application");
+      }
+      const doc = await res.json();
       toast.success("Application submitted successfully!");
-      router.push(`/insurance/premium/₹{application.id}`);
+      router.push(`/insurance/premium/${doc._id}`);
     } catch (error) {
       toast.error("Failed to submit application");
     } finally {
@@ -190,7 +191,7 @@ export default function InsuranceApplicationPage() {
                 <div key={step.number} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ₹{
+                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${
                         currentStep >= step.number
                           ? "bg-blue-600 border-blue-600 text-white"
                           : "bg-white dark:bg-zinc-900 border-border text-muted-foreground"
@@ -202,13 +203,13 @@ export default function InsuranceApplicationPage() {
                         <step.icon className="h-6 w-6" />
                       )}
                     </div>
-                    <p className={`text-sm font-medium mt-2 ₹{currentStep >= step.number ? "text-foreground" : "text-muted-foreground"}`}>
+                    <p className={`text-sm font-medium mt-2 ${currentStep >= step.number ? "text-foreground" : "text-muted-foreground"}`}>
                       {step.title}
                     </p>
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`h-0.5 flex-1 mx-4 transition-all ₹{
+                      className={`h-0.5 flex-1 mx-4 transition-all ${
                         currentStep > step.number ? "bg-blue-600" : "bg-border"
                       }`}
                     />

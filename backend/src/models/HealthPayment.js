@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const HealthPaymentSchema = new mongoose.Schema({
   applicationId: { type: mongoose.Schema.Types.ObjectId, ref: 'HealthApplication', required: true },
@@ -10,5 +10,5 @@ const HealthPaymentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('HealthPayment', HealthPaymentSchema);
+export default mongoose.models.HealthPayment || mongoose.model('HealthPayment', HealthPaymentSchema);
     

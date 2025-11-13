@@ -34,9 +34,10 @@ export default function HealthPlansPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const [plans, setPlans] = useState<HealthPlan[]>([]);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [calculatedPremium, setCalculatedPremium] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -53,7 +54,7 @@ export default function HealthPlansPage() {
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch("/api/health/plans");
+      const response = await fetch(`${API_URL}/api/health/plans`, { credentials: "include" });
 
       if (!response.ok) {
         throw new Error("Failed to fetch health plans");
@@ -69,12 +70,12 @@ export default function HealthPlansPage() {
     }
   };
 
-  const calculatePremium = (plan: HealthPlan) => {
+  const calculatePremium = (plan: any) => {
     const basePremium = plan.monthlyPremiumBase || 0;
     // Enhance calculation logic if desired
     const calculated = basePremium;
 
-    setSelectedPlan(plan.id);
+    setSelectedPlan((plan as any)._id || plan.id?.toString());
     setCalculatedPremium(calculated);
     toast.success(`Premium calculated: ₹${calculated.toFixed(2)}/month`);
   };
@@ -91,10 +92,11 @@ export default function HealthPlansPage() {
 
     try {
       const response = await fetch(
-        `/api/health/applications/${applicationId}`,
+        `${API_URL}/api/health/applications/${applicationId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             selectedPlanId: selectedPlan,
             calculatedPremium: calculatedPremium,

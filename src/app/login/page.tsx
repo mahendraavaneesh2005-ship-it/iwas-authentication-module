@@ -49,11 +49,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const u = await login(email, password);
       toast.success("Welcome back!", {
         description: "You've successfully signed in to IWAS.",
       });
-      router.push("/dashboard");
+      const role = (u?.role || "user").toLowerCase();
+      if (role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       toast.error("Login failed", {
         description: err.message || "Invalid email or password. Please try again.",

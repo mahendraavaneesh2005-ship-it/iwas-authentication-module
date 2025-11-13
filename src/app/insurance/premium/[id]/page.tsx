@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { VehicleApplication } from "@/types/insurance";
+import { calculatePremium } from "@/lib/premiumCalculator";
 import {
   Shield, Check, ArrowLeft, DollarSign
 } from "lucide-react";
@@ -19,26 +20,68 @@ export default function PremiumDisplayPage() {
   const [application, setApplication] = useState<VehicleApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   useEffect(() => {
-    const applications = JSON.parse(localStorage.getItem("applications") || "[]");
-    const found = applications.find((app: VehicleApplication) => app.id === params.id);
-
-    if (!found) {
-      setError("Application not found.");
-      setLoading(false);
-      return;
-    }
-
-    if (found.userId !== user?.id) {
-      setError("Access denied. Application does not belong to your user.");
-      setLoading(false);
-      return;
-    }
-
-    setApplication(found);
-    setLoading(false);
-  }, [params.id, user?.id]);
+    const fetchApp = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/insurance/applications/${params.id}`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          setError("Application not found.");
+          setLoading(false);
+          return;
+        }
+        const doc = await res.json();
+        if (doc.userId !== user?.id) {
+          setError("Access denied. Application does not belong to your user.");
+          setLoading(false);
+          return;
+        }
+        const premium = calculatePremium({
+          vehicleType: doc.vehicleType,
+          driverAge: doc.driverAge,
+          driverExperience: doc.driverExperience,
+          coverageType: doc.coverageType,
+          deductible: doc.deductible,
+        });
+        const assembled: VehicleApplication = {
+          id: doc._id,
+          userId: doc.userId,
+          vehicleType: doc.vehicleType,
+          make: doc.vehicleMake,
+          model: doc.vehicleModel,
+          year: doc.vehicleYear,
+          vin: doc.vin,
+          licensePlate: doc.licensePlate,
+          coverageType: doc.coverageType,
+          coverageAmount: doc.coverageAmount,
+          deductible: doc.deductible,
+          status: doc.status || "submitted",
+          submittedAt: doc.createdAt,
+          premiumCalculated: true,
+          basePremium: premium.basePremium,
+          finalPremium: premium.finalPremium,
+          premiumBreakdown: premium,
+          createdAt: doc.createdAt,
+          updatedAt: doc.createdAt,
+          color: doc.color,
+          mileage: doc.mileage,
+          driverName: doc.driverName,
+          driverLicense: doc.driverLicense,
+          driverAge: doc.driverAge,
+          driverExperience: doc.driverExperience,
+        } as any;
+        setApplication(assembled);
+      } catch (e) {
+        setError("Failed to load application");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.id && params.id) fetchApp();
+  }, [API_URL, params.id, user?.id]);
 
   const handleProceedToPayment = () => {
     if (application) {

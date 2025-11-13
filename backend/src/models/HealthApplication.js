@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const HealthApplicationSchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -27,4 +27,4 @@ const HealthApplicationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('HealthApplication', HealthApplicationSchema);
+export default mongoose.models.HealthApplication || mongoose.model('HealthApplication', HealthApplicationSchema);

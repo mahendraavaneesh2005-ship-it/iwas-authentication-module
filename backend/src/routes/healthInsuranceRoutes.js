@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import * as healthController from '../controllers/healthInsuranceController.js';
+import healthAuth from '../middleware/healthauth.js';
+
 const router = express.Router();
-const healthController = require('../controllers/healthInsuranceController');
-const healthAuth = require('../middleware/healthauth');
 
 router.post('/applications', healthAuth, healthController.createApplication);
 router.patch('/applications/:id', healthAuth, healthController.updateApplication);
@@ -12,4 +13,4 @@ router.post('/claims', healthAuth, healthController.submitClaim);
 router.get('/policies', healthAuth, healthController.getPolicies);
 router.post('/policies/:id/renew', healthAuth, healthController.renewPolicy);
 
-module.exports = router;
+export default router;

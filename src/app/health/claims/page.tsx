@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, FileText, Clock, CheckCircle2, XCircle, IndianRupee, Download, Calendar, TrendingUp, Activity, AlertCircle, Filter, ArrowLeft, IndianRupee } from "lucide-react";
+import { Shield, FileText, Clock, CheckCircle2, XCircle, IndianRupee, Download, Calendar, TrendingUp, Activity, AlertCircle, Filter, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -126,12 +126,14 @@ export default function HealthClaimsPage() {
       if (startDate) params.append("startDate", new Date(startDate).toISOString());
       if (endDate) params.append("endDate", new Date(endDate).toISOString());
 
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
       const [insuranceResponse, healthResponse] = await Promise.all([
-        fetch(`/api/claims/history?₹{params.toString()}`, {
-          headers: { Authorization: `Bearer ₹{user.id}` }
+        fetch(`/api/claims/history?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${user.id}` }
         }),
-        fetch(`/api/health/claims/history?₹{params.toString()}`, {
-          headers: { Authorization: `Bearer ₹{user.id}` }
+        fetch(`${API_URL}/api/health/claims/history?${params.toString()}`, {
+          credentials: "include",
+          headers: { Authorization: `Bearer ${user.id}` }
         })
       ]);
 
@@ -142,7 +144,29 @@ export default function HealthClaimsPage() {
 
       if (healthResponse.ok) {
         const healthData = await healthResponse.json();
-        setHealthClaims(healthData);
+        const mapped = (healthData || []).map((c: any) => ({
+          id: c._id,
+          userId: c.userId,
+          policyId: c.policyId || "",
+          claimNumber: c.claimNumber || c._id,
+          status: c.status,
+          submittedAt: c.submittedAt || c.createdAt,
+          reviewedAt: c.reviewedAt || null,
+          reviewedBy: c.reviewedBy || null,
+          approvedAmount: c.approvedAmount || null,
+          rejectionReason: c.rejectionReason || null,
+          adminNotes: null,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt || c.createdAt,
+          treatmentDate: c.treatmentDate || undefined,
+          hospitalName: c.hospitalName || undefined,
+          doctorName: c.doctorName || undefined,
+          diagnosis: c.diagnosis || undefined,
+          treatmentDescription: c.treatmentDescription || undefined,
+          claimAmount: c.claimAmount || 0,
+          documents: c.documents || [],
+        } as Claim));
+        setHealthClaims(mapped);
       }
     } catch (error) {
       console.error("Error fetching claims:", error);
@@ -158,7 +182,7 @@ export default function HealthClaimsPage() {
     setIsLoadingReports(true);
     try {
       const response = await fetch("/api/reports", {
-        headers: { Authorization: `Bearer ₹{user.id}` }
+        headers: { Authorization: `Bearer ${user.id}` }
       });
 
       if (response.ok) {
@@ -193,7 +217,7 @@ export default function HealthClaimsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ₹{user.id}`
+            Authorization: `Bearer ${user.id}`
         },
         body: JSON.stringify({
           reportType: reportForm.reportType,
@@ -238,7 +262,7 @@ export default function HealthClaimsPage() {
         totalClaimedAmount: formatCurrency(report.totalClaimedAmount),
         totalApprovedAmount: formatCurrency(report.totalApprovedAmount),
         approvalRate: report.totalClaims > 0 
-          ? `₹{((report.totalApprovedAmount / report.totalClaimedAmount) * 100).toFixed(1)}%`
+            ? `${((report.totalApprovedAmount / report.totalClaimedAmount) * 100).toFixed(1)}%`
           : "0%",
       },
       claims: report.claimsData.map(claim => {
@@ -267,7 +291,7 @@ export default function HealthClaimsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `claims-report-₹{report.reportType}-₹{Date.now()}.json`;
+    a.download = `claims-report-${report.reportType}-${Date.now()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -405,7 +429,7 @@ export default function HealthClaimsPage() {
           <div className="flex gap-4 mb-6 border-b border-border">
             <button
               onClick={() => setActiveTab("claims")}
-              className={`pb-3 px-4 font-medium transition-colors relative ₹{
+              className={`pb-3 px-4 font-medium transition-colors relative ${
                 activeTab === "claims"
                   ? "text-blue-600 dark:text-blue-400"
                   : "text-muted-foreground hover:text-foreground"
@@ -421,7 +445,7 @@ export default function HealthClaimsPage() {
             </button>
             <button
               onClick={() => setActiveTab("reports")}
-              className={`pb-3 px-4 font-medium transition-colors relative ₹{
+              className={`pb-3 px-4 font-medium transition-colors relative ${
                 activeTab === "reports"
                   ? "text-blue-600 dark:text-blue-400"
                   : "text-muted-foreground hover:text-foreground"
@@ -535,7 +559,7 @@ export default function HealthClaimsPage() {
                     const StatusIcon = statusConfig[claim.status].icon;
                     const isHealthClaim = !!claim.diagnosis;
                     return (
-                      <Card key={`₹{isHealthClaim ? 'health' : 'insurance'}-₹{claim.id}`} className="hover:shadow-md transition-shadow">
+                      <Card key={`${isHealthClaim ? 'health' : 'insurance'}-${claim.id}`} className="hover:shadow-md transition-shadow">
                         <CardHeader>
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -552,7 +576,7 @@ export default function HealthClaimsPage() {
                                 </Badge>
                               </div>
                               <CardDescription>
-                                Policy: {claim.policyId} • {isHealthClaim ? `Treatment Date: ₹{formatDate(claim.treatmentDate!)}` : `Incident Date: ₹{formatDate(claim.incidentDate!)}`}
+                                Policy: {claim.policyId} • {isHealthClaim ? `Treatment Date: ${formatDate(claim.treatmentDate!)}` : `Incident Date: ${formatDate(claim.incidentDate!)}`}
                               </CardDescription>
                             </div>
                             <div className="text-right">
@@ -810,7 +834,7 @@ export default function HealthClaimsPage() {
                             </div>
                             <div className="text-2xl font-bold text-blue-600">
                               {report.totalClaims > 0 && report.totalClaimedAmount > 0
-                                ? `₹{((report.totalApprovedAmount / report.totalClaimedAmount) * 100).toFixed(1)}%`
+                                ? `${((report.totalApprovedAmount / report.totalClaimedAmount) * 100).toFixed(1)}%`
                                 : "N/A"}
                             </div>
                           </div>
@@ -828,7 +852,7 @@ export default function HealthClaimsPage() {
                               <div
                                 className="h-full bg-green-600 rounded-full transition-all"
                                 style={{
-                                  width: `₹{(report.totalApprovedAmount / report.totalClaimedAmount) * 100}%`
+                                  width: `${(report.totalApprovedAmount / report.totalClaimedAmount) * 100}%`
                                 }}
                               />
                             </div>

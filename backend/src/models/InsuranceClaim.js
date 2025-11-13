@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const insuranceClaimSchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -11,4 +11,4 @@ const insuranceClaimSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('InsuranceClaim', insuranceClaimSchema);
+export default mongoose.models.InsuranceClaim || mongoose.model('InsuranceClaim', insuranceClaimSchema);

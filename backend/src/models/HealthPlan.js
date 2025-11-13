@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const HealthPlanSchema = new mongoose.Schema({
   planName: { type: String, required: true },
@@ -13,4 +13,4 @@ const HealthPlanSchema = new mongoose.Schema({
   updatedAt: Date
 });
 
-module.exports = mongoose.model('HealthPlan', HealthPlanSchema);
+export default mongoose.models.HealthPlan || mongoose.model('HealthPlan', HealthPlanSchema);

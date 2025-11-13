@@ -87,12 +87,36 @@ export default function ClaimsPage() {
     if (!user) return;
 
     try {
-      const response = await fetch(`/api/claims?userId=₹{user.id}`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const response = await fetch(`${API_URL}/api/insurance/claims?userId=${user.id}`, { credentials: "include" });
       if (!response.ok) {
         throw new Error("Failed to fetch claims");
       }
       const data = await response.json();
-      setClaims(data);
+      // Map backend claims to UI shape
+      const mapped: Claim[] = (data || []).map((c: any) => ({
+        id: c._id,
+        userId: c.userId,
+        policyId: c.policyId || "",
+        claimNumber: c._id,
+        incidentDate: c.incidentDate ? new Date(c.incidentDate).toISOString() : new Date(c.createdAt).toISOString(),
+        incidentDescription: c.incidentDescription || "",
+        incidentLocation: "",
+        damageDescription: "",
+        estimatedCost: 0,
+        documents: [],
+        photos: [],
+        status: (c.status || "submitted") as any,
+        submittedAt: new Date(c.createdAt).toISOString(),
+        reviewedAt: null,
+        reviewedBy: null,
+        approvedAmount: c.approvedAmount || null,
+        rejectionReason: c.rejectionReason || null,
+        adminNotes: null,
+        createdAt: new Date(c.createdAt).toISOString(),
+        updatedAt: new Date(c.createdAt).toISOString(),
+      }));
+      setClaims(mapped);
     } catch (error) {
       console.error("Error fetching claims:", error);
       toast.error("Failed to load claims");

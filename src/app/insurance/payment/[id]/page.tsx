@@ -8,15 +8,20 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Policy } from "@/types/insurance";
+import { Policy, VehicleApplication, Payment } from "@/types/insurance";
 
 import {
   Shield, User, Settings, TrendingUp, FileText, Plus,
-  AlertCircle, Heart, RefreshCw, IndianRupee, CreditCard, ArrowLeft, Clock
+  AlertCircle, Heart, RefreshCw, IndianRupee, CreditCard, ArrowLeft, Clock, Lock, Check
 } from "lucide-react";
 
 import Link from "next/link";
+import { calculatePremium } from "@/lib/premiumCalculator";
+import { toast } from "sonner";
 
 
 export default function PaymentPage() {
@@ -26,6 +31,7 @@ export default function PaymentPage() {
   const [application, setApplication] = useState<VehicleApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   const [paymentData, setPaymentData] = useState({
     cardNumber: "",
@@ -39,17 +45,52 @@ export default function PaymentPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const applications = JSON.parse(localStorage.getItem("applications") || "[]");
-    const found = applications.find((app: VehicleApplication) => app.id === params.id);
-    
-    if (!found || found.userId !== user?.id) {
-      router.push("/dashboard");
-      return;
-    }
-    
-    setApplication(found);
-    setLoading(false);
-  }, [params.id, user?.id, router]);
+    const loadApp = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/insurance/applications/${params.id}`, { credentials: "include" });
+        if (!res.ok) {
+          router.push("/dashboard");
+          return;
+        }
+        const doc = await res.json();
+        if (doc.userId !== user?.id) {
+          router.push("/dashboard");
+          return;
+        }
+        const premium = calculatePremium({
+          vehicleType: doc.vehicleType,
+          driverAge: doc.driverAge,
+          driverExperience: doc.driverExperience,
+          coverageType: doc.coverageType,
+          deductible: doc.deductible,
+        });
+        const assembled: VehicleApplication = {
+          id: doc._id,
+          userId: doc.userId,
+          make: doc.vehicleMake,
+          model: doc.vehicleModel,
+          year: doc.vehicleYear,
+          vin: doc.vin,
+          licensePlate: doc.licensePlate,
+          coverageType: doc.coverageType,
+          coverageAmount: doc.coverageAmount,
+          deductible: doc.deductible,
+          status: doc.status,
+          submittedAt: doc.createdAt,
+          premiumCalculated: true,
+          basePremium: premium.basePremium,
+          finalPremium: premium.finalPremium,
+          premiumBreakdown: premium,
+        } as any;
+        setApplication(assembled);
+      } catch (e) {
+        router.push("/dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.id && params.id) loadApp();
+  }, [API_URL, params.id, user?.id, router]);
 
   const validatePayment = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -57,7 +98,7 @@ export default function PaymentPage() {
     if (paymentData.paymentMethod !== "bank_transfer") {
       // Validate card number (16 digits)
       const cardNum = paymentData.cardNumber.replace(/\s/g, "");
-      if (!cardNum || cardNum.length !== 16 || !/^\d+₹/.test(cardNum)) {
+      if (!cardNum || cardNum.length !== 16 || !/^\d+$/.test(cardNum)) {
         newErrors.cardNumber = "Please enter a valid 16-digit card number";
       }
 
@@ -75,7 +116,7 @@ export default function PaymentPage() {
       }
 
       // Validate CVV (3-4 digits)
-      if (!paymentData.cvv || !/^\d{3,4}₹/.test(paymentData.cvv)) {
+      if (!paymentData.cvv || !/^\d{3,4}$/.test(paymentData.cvv)) {
         newErrors.cvv = "Please enter a valid CVV";
       }
     }
@@ -91,71 +132,27 @@ export default function PaymentPage() {
 
     try {
       // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
 
-      // Create policy
-      const policyNumber = `POL-₹{Date.now()}-₹{Math.random().toString(36).substring(7).toUpperCase()}`;
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1);
-
-      const policy: Policy = {
-        id: Math.random().toString(36).substring(7),
-        userId: user?.id || "",
-        applicationId: application.id,
-        policyNumber,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        status: "active",
-        vehicleDetails: {
-          make: application.make,
-          model: application.model,
-          year: application.year,
-          vin: application.vin,
-          licensePlate: application.licensePlate,
-        },
-        coverageType: application.coverageType,
-        coverageAmount: application.coverageAmount,
-        deductible: application.deductible,
-        premium: application.finalPremium || 0,
-        premiumBreakdown: application.premiumBreakdown!,
-        paymentStatus: "completed",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Create payment record
-      const payment: Payment = {
-        id: Math.random().toString(36).substring(7),
-        userId: user?.id || "",
-        policyId: policy.id,
-        amount: application.finalPremium || 0,
-        status: "completed",
-        method: paymentData.paymentMethod,
-        cardLast4: paymentData.cardNumber.slice(-4),
-        transactionId: `TXN-₹{Date.now()}`,
-        paidAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      };
-
-      policy.paymentId = payment.id;
-
-      // Store in localStorage
-      const policies = JSON.parse(localStorage.getItem("policies") || "[]");
-      policies.push(policy);
-      localStorage.setItem("policies", JSON.stringify(policies));
-
-      const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-      payments.push(payment);
-      localStorage.setItem("payments", JSON.stringify(payments));
-
-      // Update application status
-      const applications = JSON.parse(localStorage.getItem("applications") || "[]");
-      const updatedApps = applications.map((app: VehicleApplication) =>
-        app.id === application.id ? { ...app, status: "approved" } : app
-      );
-      localStorage.setItem("applications", JSON.stringify(updatedApps));
-
+      const res = await fetch(`${API_URL}/api/insurance/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          userId: user?.id,
+          applicationId: application.id,
+          amount: application.finalPremium || 0,
+          method: paymentData.paymentMethod,
+          transactionId: `TXN-${Date.now()}`,
+          coverageType: application.coverageType,
+          coverageAmount: application.coverageAmount,
+          deductible: application.deductible,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Payment failed");
+      }
       toast.success("Payment successful! Your policy is now active.");
       router.push("/insurance/policies");
     } catch (error) {
@@ -217,7 +214,7 @@ export default function PaymentPage() {
                 </div>
               </Link>
               <Button variant="ghost" asChild>
-                <Link href={`/insurance/premium/₹{application.id}`}>
+                <Link href={`/insurance/premium/${application.id}`}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Premium
                 </Link>
