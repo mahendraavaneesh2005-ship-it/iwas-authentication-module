@@ -6,17 +6,29 @@ import User from "../models/User.js";
 dotenv.config();
 
 const run = async () => {
-  await connectDB(process.env.MONGODB_URI);
-  const email = process.env.ADMIN_EMAIL || "admin@iwas.com";
-  const existing = await User.findOne({ email });
-  if (existing) {
-    console.log("Admin already exists:", email);
+  try {
+    console.log("Connecting to DB using URI:", process.env.MONGODB_URI);
+    await connectDB(process.env.MONGODB_URI);  // Connect to MongoDB
+
+    const email = (process.env.ADMIN_EMAIL || "admin@iwas.com").trim().toLowerCase();
+    const existing = await User.findOne({ email });
+
+    if (existing) {
+      console.log("Admin already exists:", email);
+      process.exit(0);
+    }
+
+    const password = process.env.ADMIN_PASSWORD || "Admin@123";
+    const hash = await bcrypt.hash(password.trim(), 10);
+
+    await User.create({ name: "Admin", email, password: hash, role: "admin" });
+
+    console.log("Admin created:", email);
     process.exit(0);
+  } catch (error) {
+    console.error("Failed to create admin:", error);
+    process.exit(1);
   }
-  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD || "Admin@123", 10);
-  await User.create({ name: "Admin", email, password: hash, role: "admin" });
-  console.log("Admin created:", email);
-  process.exit(0);
 };
 
-run().catch(err => { console.error(err); process.exit(1); });
+run();
