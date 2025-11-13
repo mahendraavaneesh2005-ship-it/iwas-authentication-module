@@ -108,7 +108,8 @@ export default function HealthInsuranceApplicationPage() {
       }
 
       toast.success("Application submitted successfully!");
-      router.push(`/health/plans?applicationId=₹{data.id}`);
+      router.push(`/health/plans?applicationId=${data.id}`);
+
     } catch (error) {
       console.error("Submission error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to submit application");

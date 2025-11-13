@@ -5,7 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Shield, IndianRupee, Calendar, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Shield,
+  IndianRupee,
+  Calendar,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
 interface HealthPlan {
@@ -69,31 +76,38 @@ export default function HealthPlansPage() {
 
     setSelectedPlan(plan.id);
     setCalculatedPremium(calculated);
-    toast.success(`Premium calculated: ₹₹{calculated.toFixed(2)}/month`);
+    toast.success(`Premium calculated: ₹${calculated.toFixed(2)}/month`);
   };
 
   const handleProceedToPayment = async () => {
     if (!selectedPlan || !calculatedPremium || !applicationId) {
-      toast.error("Please select a plan and ensure you have an active application");
+      toast.error(
+        "Please select a plan and ensure you have an active application"
+      );
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      const response = await fetch(`/api/health/applications/₹{applicationId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          selectedPlanId: selectedPlan,
-          calculatedPremium: calculatedPremium,
-        }),
-      });
+      const response = await fetch(
+        `/api/health/applications/${applicationId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            selectedPlanId: selectedPlan,
+            calculatedPremium: calculatedPremium,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to update application");
 
       toast.success("Plan selected! Proceeding to payment...");
-      router.push(`/health/payment?applicationId=₹{applicationId}&planId=₹{selectedPlan}&amount=₹{calculatedPremium}`);
+      router.push(
+        `/health/payment?applicationId=${applicationId}&planId=${selectedPlan}&amount=${calculatedPremium}`
+      );
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to proceed to payment");
@@ -126,8 +140,12 @@ export default function HealthPlansPage() {
               Back to Application
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-foreground mt-4">Select Your Health Plan</h1>
-          <p className="text-muted-foreground mt-2">Choose the plan that best fits your needs</p>
+          <h1 className="text-3xl font-bold text-foreground mt-4">
+            Select Your Health Plan
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Choose the plan that best fits your needs
+          </p>
         </div>
 
         {/* Plans Grid */}
@@ -135,7 +153,7 @@ export default function HealthPlansPage() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border-2 transition-all₹₹{
+              className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border-2 transition-all ${
                 selectedPlan === plan.id
                   ? "border-blue-600 shadow-lg"
                   : "border-border hover:border-blue-300 dark:hover:border-blue-800"
@@ -145,8 +163,12 @@ export default function HealthPlansPage() {
                 {/* Plan Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-foreground">{plan.planName}</h3>
-                    <span className="text-sm text-muted-foreground capitalize">{plan.planType}</span>
+                    <h3 className="text-xl font-semibold text-foreground">
+                      {plan.planName}
+                    </h3>
+                    <span className="text-sm text-muted-foreground capitalize">
+                      {plan.planType}
+                    </span>
                   </div>
                   {selectedPlan === plan.id && (
                     <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-full">
@@ -159,7 +181,10 @@ export default function HealthPlansPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-bold text-foreground">
-                      ₹{plan.monthlyPremiumBase ? plan.monthlyPremiumBase.toFixed(0) : "N/A"}
+                      ₹
+                      {plan.monthlyPremiumBase
+                        ? plan.monthlyPremiumBase.toFixed(0)
+                        : "N/A"}
                     </span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
@@ -170,13 +195,25 @@ export default function HealthPlansPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <Shield className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-foreground">
-                      Coverage: <strong>₹{plan.coverageAmount ? plan.coverageAmount.toLocaleString() : "N/A"}</strong>
+                      Coverage:{" "}
+                      <strong>
+                        ₹
+                        {plan.coverageAmount
+                          ? plan.coverageAmount.toLocaleString()
+                          : "N/A"}
+                      </strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <IndianRupee className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-foreground">
-                      Deductible: <strong>₹{plan.annualDeductible ? plan.annualDeductible.toLocaleString() : "N/A"}</strong>
+                      Deductible:{" "}
+                      <strong>
+                        ₹
+                        {plan.annualDeductible
+                          ? plan.annualDeductible.toLocaleString()
+                          : "N/A"}
+                      </strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
@@ -188,7 +225,13 @@ export default function HealthPlansPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <TrendingUp className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <span className="text-foreground">
-                      Max Out-of-Pocket: <strong>₹{plan.outOfPocketMax ? plan.outOfPocketMax.toLocaleString() : "N/A"}</strong>
+                      Max Out-of-Pocket:{" "}
+                      <strong>
+                        ₹
+                        {plan.outOfPocketMax
+                          ? plan.outOfPocketMax.toLocaleString()
+                          : "N/A"}
+                      </strong>
                     </span>
                   </div>
                 </div>
@@ -236,7 +279,9 @@ export default function HealthPlansPage() {
             <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-border p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Ready to Continue?</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">
+                    Ready to Continue?
+                  </h3>
                   <p className="text-sm text-muted-foreground">
                     Proceed to payment to activate your health insurance policy
                   </p>
@@ -259,7 +304,8 @@ export default function HealthPlansPage() {
           <div className="max-w-3xl mx-auto mt-8">
             <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-900 p-4">
               <p className="text-sm text-yellow-900 dark:text-yellow-100">
-                <strong>Note:</strong> You need to complete an application before selecting a plan.{" "}
+                <strong>Note:</strong> You need to complete an application before
+                selecting a plan.{" "}
                 <Link href="/health/apply" className="underline font-medium">
                   Start your application here
                 </Link>

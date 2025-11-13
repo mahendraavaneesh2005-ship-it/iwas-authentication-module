@@ -7,7 +7,7 @@
   import { Button } from "@/components/ui/button";
   import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
   import { Badge } from "@/components/ui/badge";
-  import { Shield, ArrowLeft, FileText, Calendar, IndianRupee, CheckCircle, XCircle, Clock, Plus, RefreshCw, AlertCircle, Heart, IndianRupee } from "lucide-react";
+  import { Shield, ArrowLeft, FileText, Calendar, IndianRupee, CheckCircle, XCircle, Clock, Plus, RefreshCw, AlertCircle, Heart, } from "lucide-react";
   import Link from "next/link";
   import { toast } from "sonner";
 

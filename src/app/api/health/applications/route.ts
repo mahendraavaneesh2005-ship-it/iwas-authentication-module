@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Extract and validate required fields
+    // Destructure fields
     const {
       userId,
       fullName,
@@ -33,121 +33,43 @@ export async function POST(request: NextRequest) {
       calculatedPremium,
     } = body;
 
-    // Validate all required fields
-    if (!userId?.trim()) {
-      return NextResponse.json(
-        { error: 'User ID is required', code: 'MISSING_USER_ID' },
-        { status: 400 }
-      );
+    // Basic validation for required string fields
+    const requiredFields = [
+      { key: 'userId', value: userId },
+      { key: 'fullName', value: fullName },
+      { key: 'email', value: email },
+      { key: 'phone', value: phone },
+      { key: 'dateOfBirth', value: dateOfBirth },
+      { key: 'gender', value: gender },
+      { key: 'address', value: address },
+      { key: 'city', value: city },
+      { key: 'state', value: state },
+      { key: 'zipCode', value: zipCode },
+      { key: 'height', value: height },
+      { key: 'weight', value: weight },
+      { key: 'smoker', value: smoker },
+      { key: 'emergencyContactName', value: emergencyContactName },
+      { key: 'emergencyContactPhone', value: emergencyContactPhone },
+    ];
+
+    for (const field of requiredFields) {
+      if (!field.value || typeof field.value !== 'string' || !field.value.trim()) {
+        return NextResponse.json(
+          { error: `${field.key} is required`, code: `MISSING_${field.key.toUpperCase()}` },
+          { status: 400 },
+        );
+      }
     }
 
-    if (!fullName?.trim()) {
-      return NextResponse.json(
-        { error: 'Full name is required', code: 'MISSING_FULL_NAME' },
-        { status: 400 }
-      );
-    }
-
-    if (!email?.trim()) {
-      return NextResponse.json(
-        { error: 'Email is required', code: 'MISSING_EMAIL' },
-        { status: 400 }
-      );
-    }
-
-    if (!phone?.trim()) {
-      return NextResponse.json(
-        { error: 'Phone is required', code: 'MISSING_PHONE' },
-        { status: 400 }
-      );
-    }
-
-    if (!dateOfBirth?.trim()) {
-      return NextResponse.json(
-        { error: 'Date of birth is required', code: 'MISSING_DATE_OF_BIRTH' },
-        { status: 400 }
-      );
-    }
-
-    if (!gender?.trim()) {
-      return NextResponse.json(
-        { error: 'Gender is required', code: 'MISSING_GENDER' },
-        { status: 400 }
-      );
-    }
-
-    if (!address?.trim()) {
-      return NextResponse.json(
-        { error: 'Address is required', code: 'MISSING_ADDRESS' },
-        { status: 400 }
-      );
-    }
-
-    if (!city?.trim()) {
-      return NextResponse.json(
-        { error: 'City is required', code: 'MISSING_CITY' },
-        { status: 400 }
-      );
-    }
-
-    if (!state?.trim()) {
-      return NextResponse.json(
-        { error: 'State is required', code: 'MISSING_STATE' },
-        { status: 400 }
-      );
-    }
-
-    if (!zipCode?.trim()) {
-      return NextResponse.json(
-        { error: 'Zip code is required', code: 'MISSING_ZIP_CODE' },
-        { status: 400 }
-      );
-    }
-
-    if (!height?.trim()) {
-      return NextResponse.json(
-        { error: 'Height is required', code: 'MISSING_HEIGHT' },
-        { status: 400 }
-      );
-    }
-
-    if (!weight?.trim()) {
-      return NextResponse.json(
-        { error: 'Weight is required', code: 'MISSING_WEIGHT' },
-        { status: 400 }
-      );
-    }
-
-    if (!smoker?.trim()) {
-      return NextResponse.json(
-        { error: 'Smoker status is required', code: 'MISSING_SMOKER' },
-        { status: 400 }
-      );
-    }
-
-    if (!emergencyContactName?.trim()) {
-      return NextResponse.json(
-        { error: 'Emergency contact name is required', code: 'MISSING_EMERGENCY_CONTACT_NAME' },
-        { status: 400 }
-      );
-    }
-
-    if (!emergencyContactPhone?.trim()) {
-      return NextResponse.json(
-        { error: 'Emergency contact phone is required', code: 'MISSING_EMERGENCY_CONTACT_PHONE' },
-        { status: 400 }
-      );
-    }
-
-    // Generate application number
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
+    // Generate application number with date prefix and sequence
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
     const datePrefix = `${year}${month}${day}`;
     const applicationPrefix = `HLT-${datePrefix}-`;
 
-    // Query existing applications for today to get the next sequence number
+    // Find last application number for today
     const existingApplications = await db
       .select()
       .from(healthApplications)
@@ -157,17 +79,15 @@ export async function POST(request: NextRequest) {
 
     let sequenceNumber = 1;
     if (existingApplications.length > 0) {
-      const lastApplicationNumber = existingApplications[0].applicationNumber;
-      const lastSequence = lastApplicationNumber.slice(-4);
-      sequenceNumber = parseInt(lastSequence, 10) + 1;
+      const lastAppNum = existingApplications[0].applicationNumber;
+      const lastSeq = lastAppNum.slice(-4);
+      sequenceNumber = parseInt(lastSeq, 10) + 1;
     }
 
     const applicationNumber = `${applicationPrefix}${String(sequenceNumber).padStart(4, '0')}`;
+    const isoNow = now.toISOString();
 
-    // Prepare timestamps
-    const now = new Date().toISOString();
-
-    // Prepare insert data with sanitized and validated fields
+    // Prepare insert payload
     const insertData = {
       userId: userId.trim(),
       applicationNumber,
@@ -193,23 +113,20 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       selectedPlanId: selectedPlanId || null,
       calculatedPremium: calculatedPremium || null,
-      submittedAt: now,
-      createdAt: now,
-      updatedAt: now,
+      submittedAt: isoNow,
+      createdAt: isoNow,
+      updatedAt: isoNow,
     };
 
-    // Insert the new application
-    const newApplication = await db
-      .insert(healthApplications)
-      .values(insertData)
-      .returning();
+    // Insert into DB
+    const insertedApplications = await db.insert(healthApplications).values(insertData).returning();
 
-    return NextResponse.json(newApplication[0], { status: 201 });
+    return NextResponse.json(insertedApplications[0], { status: 201 });
   } catch (error) {
     console.error('POST error:', error);
     return NextResponse.json(
       { error: 'Internal server error: ' + (error as Error).message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
