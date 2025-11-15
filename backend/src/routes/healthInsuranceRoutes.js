@@ -10,7 +10,7 @@ router.get('/plans', healthController.getPlans);
 router.post('/payments', healthAuth, healthController.processPayment);
 router.get('/claims/history', healthAuth, healthController.getClaimsHistory);
 router.post('/claims', healthAuth, healthController.submitClaim);
-router.get('/policies', healthAuth, healthController.getPolicies);
+router.get('/policies', healthController.getPolicies);
 router.post('/policies/:id/renew', healthAuth, healthController.renewPolicy);
 
 export default router;

@@ -171,10 +171,10 @@ export default function PremiumDisplayPage() {
               <div className="text-center mb-8 pb-8 border-b">
                 <p className="text-sm text-muted-foreground mb-2">Annual Premium</p>
                 <div className="text-5xl font-bold text-blue-600 mb-4">
-                  ${application.finalPremium?.toLocaleString()}
+                  ₹{application.finalPremium?.toLocaleString('en-IN')}
                 </div>
                 <p className="text-lg text-muted-foreground">
-                  or <span className="font-semibold text-foreground">${monthlyPremium}/month</span>
+                  or <span className="font-semibold text-foreground">₹{monthlyPremium}/month</span>
                 </p>
               </div>
               {application.premiumBreakdown && (
@@ -183,7 +183,7 @@ export default function PremiumDisplayPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-muted/50 rounded-lg p-4">
                       <p className="text-sm text-muted-foreground mb-1">Base Premium</p>
-                      <p className="text-xl font-semibold">${application.premiumBreakdown.basePremium}</p>
+                      <p className="text-xl font-semibold">₹{application.premiumBreakdown.basePremium}</p>
                     </div>
                     {/* Add other breakdown factors in same structure */}
                   </div>

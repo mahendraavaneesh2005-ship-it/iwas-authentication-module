@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node -r dotenv/config src/index.js",
-    "seed:admin": "node -r dotenv/config src/scripts/createAdmin.js",
+    "seed:admin": "node -r dotenv/config src/Scripts/createAdmin.js",
+    "update:admin-password": "node -r dotenv/config src/Scripts/updateAdminPassword.js",
     "test": "jest"
   },
   "keywords": [
